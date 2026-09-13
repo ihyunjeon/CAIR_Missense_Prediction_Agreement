@@ -131,12 +131,37 @@ Phase 3 needs no GPU at all: ProteinGym v1.3 ships precomputed ESM-1v zero-shot
 scores, and AlphaMissense comes from the local atlas. The DMS arm — the
 minimum publishable result — is pure data engineering. Run it first.
 
-## Next
+## Phases
 
-- Phase 1: widen the gene set. Five genes cannot separate crop effects from gene
-  identity (the cropped set is exactly BRCA1 + CFTR), and BRCA1 at mean pLDDT
-  41.6 dominates any structural stratification.
-- Phase 2: gene-held-out, macro-averaged, gene-ID-baselined evaluation.
-- Phase 3: DMS adjudication via ProteinGym.
-- Still to acquire: ProteinGym substitutions, PrimateAI-3D (licence registration
-  — start early), ESM-IF1 scores, gnomAD constraint metrics.
+The design review (`docs/plan_review.html`) stages the work 0-5. Phase 0 is
+done; 4 and 5 are explicitly upside rather than load-bearing, and there is a
+defensible result at the end of Phase 3.
+
+| # | phase | owner | deliverable |
+|---|---|---|---|
+| 0 | Spike | Ihyun | One joined row end to end. **Done** — assertion 1,168/1,168 |
+| 1 | Data | Labels owner · Ihyun | The joined table at 300-500 genes: 4 predictors, DSSP/RSA/pLDDT/contact number/Pfam, gnomAD AF + LOEUF + Neff + crop flag, plus ProteinGym DMS as a second label set |
+| 2 | Baseline | Baseline owner | Structure-only classifier, gene-held-out CV, macro AUROC, bootstrap-over-genes CIs, against a gene-ID-only null |
+| 3 | Core | DMS owner | **Minimum publishable result.** On DMS, restrict to disagreement cases and ask which predictor tracks experimental fitness, stratified by structure |
+| 4 | Model | Modelling owner | Predict the signed disagreement residual. Grouped conditional permutation, LOCO with refitting, variance decomposition as a Venn with the overlap made explicit |
+| 5 | Stress | Ihyun | Stratify by gnomAD-observed vs unobserved; replicate on DMS |
+
+**Phase 3 does not depend on Phase 1** — its inputs are ProteinGym (which ships
+its own ESM-1v scores) and the local AlphaMissense atlas. It needs no GPU and is
+unblocked now. Run it first and let Phase 1's ClinVar arm proceed behind it.
+
+The plan assigns no durations beyond "week 1" for Phase 0, and judges the
+unstaged scope at roughly 2x what five students finish in a summer.
+
+## Immediate next actions
+
+- **Start PrimateAI-3D licence registration.** It is external, slow, and the
+  long pole on Phase 1.
+- Widen the gene set before any structural claim. Five genes cannot separate
+  crop effects from gene identity (the cropped set is exactly BRCA1 + CFTR), and
+  BRCA1 at mean pLDDT 41.6 dominates any structural stratification.
+- Test the TF32 hypothesis on the same 734 positions before committing the full
+  array; re-run the laptop/cluster cross-validation if precision changes.
+- Record which GPU models each teammate can reach. A non-member's `highp` job
+  waits forever with no error.
+- Decide whether dbNSFP 5.x still earns its 30-60 GB now that EVE is in hand.
