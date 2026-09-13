@@ -149,6 +149,14 @@ and land in `data/alphafold/`. Then:
 About four minutes end to end on an M3 Pro. Step 1 takes a gene count as its
 only argument.
 
+## Licence
+
+Code is MIT (see `LICENSE`). **This does not extend to the data.** AlphaMissense
+is CC BY-NC-SA 4.0 (non-commercial) and EVE, ClinVar, MANE and AlphaFold each
+carry their own terms — none of that data is redistributed here, and the
+derived parquet in `data/` inherits the source terms. Record the AlphaMissense
+licence in any publication.
+
 ## Environment
 
 Use the `vep` conda env, not `ml_dev` — `ml_dev` has a broken torch install and
