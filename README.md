@@ -64,32 +64,39 @@ There is real signal to model: rank-normalised disagreement has sd 0.225, and
 22.3% of variants exceed |0.25|. Within-protein rank agreement is +0.700
 (AM–EVE), +0.688 (AM–ESM) and +0.621 (ESM–EVE) — no pair is redundant.
 
-## Trial Phase 1 + 2 (150 genes)
+## Trial Phase 1 + 2 (400 genes)
 
-An undersized rehearsal of the real Phases 1 and 2, start to finish on the
-laptop in about three minutes (`scripts/trial/`, outputs in `data/trial/`).
-9,595 variants over 148 genes, 54 with >=10 of both classes. ESM-1v is excluded
-— at 2.571 s/position it needs ~5.5 h for this cohort and belongs on Hoffman2.
+A rehearsal of the real Phases 1 and 2, start to finish on the laptop in under
+four minutes (`scripts/trial/`, outputs in `data/trial/`). 18,700 variants over
+398 genes, 103 with >=10 of both classes. ESM-1v is excluded — this cohort's
+15,367 unique positions cost **6.8 A100-hours**, which is the Hoffman2 array's
+job, and Phase 2 is a structure-only baseline that does not need it.
 
 Structure-only features, `HistGradientBoostingClassifier`, macro per-gene AUROC,
 bootstrap over genes:
 
 | model | macro AUROC | 95% CI | pooled |
 |---|---|---|---|
-| Structure-only, **gene-held-out** | **0.844** | [0.816, 0.870] | 0.822 |
-| Structure-only, random split | 0.908 | [0.888, 0.928] | 0.956 |
-| Gene-ID-only (circular) | 0.500 | — | **0.821** |
-| AlphaMissense *(reference)* | 0.966 | [0.948, 0.980] | 0.970 |
-| EVE *(reference)* | 0.948 | [0.926, 0.965] | 0.931 |
+| Structure-only, **gene-held-out** | **0.862** | [0.838, 0.884] | 0.839 |
+| Structure-only, random split | 0.887 | [0.868, 0.904] | 0.940 |
+| Gene-ID-only (circular) | 0.500 | — | **0.805** |
+| AlphaMissense *(reference)* | 0.972 | [0.962, 0.981] | 0.966 |
+| EVE *(reference)* | 0.951 | [0.938, 0.962] | 0.934 |
 
-**The gene-ID null is the result.** Knowing only the gene name gives pooled
-AUROC 0.821; the structure model gets 0.822 pooled — **+0.001**. The same model
-is 0.844 macro against a macro null of 0.500. Pooled and macro tell opposite
-stories because pooled credits the model for between-gene base rates it never
-learned. Report macro.
+**The gene-ID null is the point.** Knowing only the gene name gives pooled AUROC
+0.805; the structure model gets 0.839 pooled, just +0.034 over it. The same
+model is 0.862 macro against a macro null of 0.500. Pooled and macro tell
+opposite stories because pooled credits the model for between-gene base rates it
+never learned. Report macro.
 
-Holding genes out costs 0.064 macro AUROC (0.908 -> 0.844) — the memorisation
+Holding genes out costs 0.025 macro AUROC (0.887 -> 0.862) — the memorisation
 the design review warned about, now measured rather than asserted.
+
+This was first run at 150 genes, where the structure model beat the gene-ID null
+by only +0.001 pooled. **That did not replicate**: on 54 evaluable genes it was
+largely noise, and the gap is 34x larger at 400. `data/README.md` records both
+runs and the correction — effect sizes on a few dozen genes are not stable,
+which is the confidence-interval argument for going to full scale.
 
 Two new silent AlphaFold traps and a hard/soft split of the assertion gate came
 out of the scale-up; all three are written up in `data/README.md`.

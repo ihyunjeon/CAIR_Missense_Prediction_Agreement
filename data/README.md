@@ -573,3 +573,65 @@ Still five-gene problems at 150-gene scale: no DMS replication, no frequency
 stratification, no paralog clustering (gene-held-out splits still leak across
 paralogs — mmseqs at 30% identity is the fix and is not applied here), and no
 ESM-1v, so no disagreement analysis at all.
+
+### Scaled to 400 genes (same day) — and one 150-gene result does not replicate
+
+The 150-gene run above was rerun at 400 genes with no code changes, to check
+which findings were real and which were small-sample. Runtime: gene selection
+35 s, table build 2 min 57 s, Phase 2 baseline 5 s.
+
+The candidate pool is the ceiling: **827 genes have >=10 of both classes** in
+two-star ClinVar, and after the ~17% AlphaFold loss (isoform-only + 404) that
+allows roughly 690. 400 is comfortable; much beyond ~690 is not reachable on
+this label definition without relaxing the two-star or >=10-of-both criteria.
+
+| | 150 genes | 400 genes |
+|---|---|---|
+| variants | 9,595 | 18,700 |
+| genes in table | 148 | 398 |
+| label balance | 1.50:1 | 1.62:1 |
+| evaluable genes (>=10 of both) | 54 | **103** |
+| EVE coverage | 86.6% | 84.9% |
+| unique (protein, position) | 7,673 | **15,367** |
+| hard-gate failures | 173 | 193 |
+| isoform-offset rows kept | 449 | 951 |
+
+**ESM-1v budget for this cohort:** 15,367 unique positions x 5 models is
+**6.8 A100-hours** at the measured 1.590 s/position, or 11.0 h on the laptop.
+That is the number to size the Hoffman2 array against, and it is why ESM-1v is
+absent from this table.
+
+| model | macro AUROC | 95% CI | pooled |
+|---|---|---|---|
+| Structure-only, **gene-held-out** | **0.862** | [0.838, 0.884] | 0.839 |
+| Structure-only, random split | 0.887 | [0.868, 0.904] | 0.940 |
+| Gene-ID-only (circular) | 0.500 | — | 0.805 |
+| AlphaMissense *(reference)* | 0.972 | [0.962, 0.981] | 0.966 |
+| EVE *(reference)* | 0.951 | [0.938, 0.962] | 0.934 |
+
+**CORRECTION to the 150-gene write-up.** That run reported the structure model
+beating the gene-ID null by **+0.001** pooled (0.822 vs 0.821) and presented it
+as a stark confirmation of the review's warning. It does not replicate. At 400
+genes the gap is **+0.034** (0.839 vs 0.805) — still small, but 34x larger, and
+the +0.001 was substantially small-sample noise on 54 evaluable genes. Treat the
+150-gene figure as superseded.
+
+Two other quantities moved in the same direction, and for the same reason:
+
+- The circularity penalty **halved**, from −0.064 to −0.025 (random 0.887 ->
+  gene-held-out 0.862). With 398 genes there is far less to gain from memorising
+  any one gene's hotspot domain, so holding genes out costs less.
+- The gene-held-out macro AUROC **rose**, 0.844 -> 0.862, with a tighter CI
+  ([0.816, 0.870] -> [0.838, 0.884]) on 103 evaluable genes instead of 54.
+
+What survives the scale-up unchanged: pooled and macro still tell opposite
+stories (gene-ID-only reaches pooled 0.805 while its macro is 0.500 by
+construction), so **report macro**. AM 0.972 and EVE 0.951 macro remain far
+above the structure-only model, and remain non-comparable — neither trained on
+ClinVar.
+
+The lesson generalises beyond this table: **effect sizes estimated on a few
+dozen evaluable genes are not stable**, which is exactly the confidence-interval
+argument the design review made for 300-500 genes. Anything measured on the
+five-gene spike or on 150 genes should be re-estimated at full scale before it
+is written down as a finding.
