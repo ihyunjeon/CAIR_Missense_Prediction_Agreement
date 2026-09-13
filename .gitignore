@@ -51,5 +51,11 @@ venv/
 docs/CAIR_VEP_project_report_*.docx
 docs/CAIR_VEP_project_report_*.pdf
 
+# Local-only report toolchain (shared content + the two renderers).
+local/
+
+# Word lock files
+~$*
+
 # macOS
 .DS_Store
