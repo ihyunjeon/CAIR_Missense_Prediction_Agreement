@@ -11,10 +11,11 @@ that disagreement as a function of alignment depth, structural context and
 sequence-length cropping, then adjudicates it against deep mutational scanning
 data, where there is a ground truth that owes nothing to ClinVar.
 
-**Status: Phase 0 complete; a 150-gene trial of Phases 1–2 is done.** The join
+**Status: Phase 0 complete; a 400-gene trial of Phases 1–2 is done.** The join
 architecture is validated end to end, and the structure-only baseline has been
-run under the gene-held-out protocol against a gene-ID null. The full-scale
-Phases 1–2 (300–500 genes, with ESM-1v) are not yet built.
+run under the gene-held-out protocol against a gene-ID null. Still missing from
+the full Phases 1–2: ESM-1v scores (6.8 A100-hours for this cohort), PrimateAI-3D,
+gnomAD constraint metrics, and mmseqs paralog clustering of the CV splits.
 
 ## What works today
 
@@ -107,7 +108,7 @@ out of the scale-up; all three are written up in `data/README.md`.
 |---|---|
 | `scripts/esm1v_masked_marginals.py` | ESM-1v scoring. Emits the full 20-AA log-prob vector per position, so every substitution at a residue costs one forward pass; compute LLR as `lp[mut] - lp[wt]` at analysis time. Cost scales with unique positions, not variants. |
 | `scripts/spike/phase0_{join,assert,finalize,eve}.py` | The Phase 0 pipeline, in order. |
-| `scripts/trial/trial_0{1,2,3}_*.py` | The 150-gene trial: gene selection + structures, joined table, Phase 2 baseline. |
+| `scripts/trial/trial_0{1,2,3}_*.py` | The 400-gene trial: gene selection + structures, joined table, Phase 2 baseline. |
 | `hoffman2/` | SGE submit script and cluster environment setup for the A100 run. |
 | `data/README.md` | **The lab notebook.** Acquisition commands, row counts, licences, and every trap found so far. Read this before touching the data. |
 | `docs/` | Progress report and design review. |
@@ -125,6 +126,28 @@ unplugged; nothing in the normal analysis path needs it.
 **AlphaMissense is CC BY-NC-SA 4.0 — non-commercial.** Record that in any
 publication. The trained weights were never released, so the precomputed atlas
 is the only way to obtain AM scores.
+
+## Reproducing the trial
+
+`data/` is untracked, so a fresh clone has the code and the derived results but
+none of the source atlases. Four inputs are needed, all acquired with the
+commands in `data/README.md`:
+
+    data/clinvar/variant_summary.txt.gz       422 MB
+    data/mane/mane_summary.txt.gz             1 MB
+    data/alphamissense/am_hg38.parquet        2.8 GB  (converted from the TSV)
+    data/eve/eve_variants.parquet             424 MB
+
+AlphaFold structures are fetched by the pipeline itself (~285 MB for 400 genes)
+and land in `data/alphafold/`. Then:
+
+    export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+    python scripts/trial/trial_01_genes.py 400   # select genes, fetch structures
+    python scripts/trial/trial_02_build.py       # join, assert, structure, EVE
+    python scripts/trial/trial_03_baseline.py    # Phase 2
+
+About four minutes end to end on an M3 Pro. Step 1 takes a gene count as its
+only argument.
 
 ## Environment
 
