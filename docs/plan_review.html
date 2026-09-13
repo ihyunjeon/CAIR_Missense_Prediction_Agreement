@@ -1,0 +1,585 @@
+<title>Structure or Frequency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+
+<style>
+:root{
+  --paper:#F4F6FB; --surface:#FFFFFF; --surface-2:#EDF0F8;
+  --ink:#14161F; --ink-2:#454B60; --ink-3:#6E7590;
+  --rule:#D8DDEC; --rule-2:#C3CADE;
+  --accent:#3D4EC8; --accent-soft:#E5E8FA;
+  --crit:#AF3527; --crit-soft:#FAE7E4;
+  --warn:#8A6009; --warn-soft:#F8EEDA;
+  --ok:#26654D; --ok-soft:#E0F0E9;
+  --shadow:0 1px 2px rgba(20,22,31,.05), 0 8px 24px -16px rgba(20,22,31,.25);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1017; --surface:#161923; --surface-2:#1D2130;
+    --ink:#E7E9F2; --ink-2:#A8AEC4; --ink-3:#7E859C;
+    --rule:#272C3B; --rule-2:#394054;
+    --accent:#93A0FF; --accent-soft:#1D2244;
+    --crit:#EC8073; --crit-soft:#341D1B;
+    --warn:#D8A648; --warn-soft:#302716;
+    --ok:#5FC49B; --ok-soft:#132C24;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1017; --surface:#161923; --surface-2:#1D2130;
+  --ink:#E7E9F2; --ink-2:#A8AEC4; --ink-3:#7E859C;
+  --rule:#272C3B; --rule-2:#394054;
+  --accent:#93A0FF; --accent-soft:#1D2244;
+  --crit:#EC8073; --crit-soft:#341D1B;
+  --warn:#D8A648; --warn-soft:#302716;
+  --ok:#5FC49B; --ok-soft:#132C24;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16.5px; line-height:1.62; margin:0;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px; margin:0 auto; padding:0 28px 120px}
+
+/* ---------- masthead ---------- */
+.mast{padding:64px 0 34px; border-bottom:2px solid var(--ink); margin-bottom:0}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--accent);
+  display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:20px;
+}
+.eyebrow span:not(:last-child)::after{content:""; }
+.dot{width:3px;height:3px;border-radius:50%;background:var(--rule-2);display:inline-block}
+h1{
+  font-family:Newsreader,Georgia,serif; font-weight:500;
+  font-size:clamp(2.6rem,6.2vw,4.1rem); line-height:1.02; letter-spacing:-.022em;
+  margin:0 0 22px; text-wrap:balance;
+}
+.standfirst{
+  font-family:Newsreader,Georgia,serif; font-size:clamp(1.12rem,2.2vw,1.34rem);
+  line-height:1.5; color:var(--ink-2); max-width:60ch; margin:0;
+}
+.standfirst b{color:var(--ink); font-weight:600}
+
+/* ---------- section scaffold ---------- */
+section{padding:56px 0 8px; border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:none}
+.shead{display:flex; align-items:baseline; gap:16px; margin-bottom:28px; flex-wrap:wrap}
+.snum{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:600;
+  letter-spacing:.1em; color:var(--ink-3); padding-top:.5em; flex:none;
+}
+h2{
+  font-family:Newsreader,Georgia,serif; font-weight:600;
+  font-size:clamp(1.6rem,3.4vw,2.15rem); line-height:1.14; letter-spacing:-.015em;
+  margin:0; text-wrap:balance;
+}
+h3{
+  font-family:"IBM Plex Sans",sans-serif; font-weight:600; font-size:1.05rem;
+  letter-spacing:-.005em; margin:34px 0 10px; line-height:1.35;
+}
+h3:first-child{margin-top:0}
+p{margin:0 0 15px; max-width:68ch}
+a{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:3px}
+strong{font-weight:600}
+code, .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.86em}
+p code, li code, td code{
+  background:var(--surface-2); padding:.12em .38em; border-radius:4px;
+  border:1px solid var(--rule); white-space:nowrap;
+}
+ul,ol{margin:0 0 15px; padding-left:1.15em; max-width:68ch}
+li{margin-bottom:8px}
+li::marker{color:var(--ink-3)}
+
+/* ---------- callout ---------- */
+.callout{
+  background:var(--surface); border:1px solid var(--rule); border-left:3px solid var(--accent);
+  border-radius:0 8px 8px 0; padding:20px 24px; margin:26px 0; box-shadow:var(--shadow);
+}
+.callout.crit{border-left-color:var(--crit)}
+.callout.ok{border-left-color:var(--ok)}
+.callout p:last-child{margin-bottom:0}
+.callout .tag{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--ink-3); display:block; margin-bottom:8px;
+}
+
+/* ---------- flaw cards ---------- */
+.flaws{display:flex; flex-direction:column; gap:2px; margin:0 0 8px}
+.flaw{background:var(--surface); border:1px solid var(--rule); border-radius:8px; padding:24px 26px; box-shadow:var(--shadow); margin-bottom:18px}
+.flaw > .fhead{display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:12px}
+.chip{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600;
+  letter-spacing:.1em; text-transform:uppercase; padding:3px 9px; border-radius:100px;
+  border:1px solid currentColor;
+}
+.chip.crit{color:var(--crit); background:var(--crit-soft)}
+.chip.warn{color:var(--warn); background:var(--warn-soft)}
+.chip.ok{color:var(--ok); background:var(--ok-soft)}
+.chip.acc{color:var(--accent); background:var(--accent-soft)}
+.flaw h3{margin:0; font-size:1.12rem; flex:1 1 320px}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto; margin:22px 0; border:1px solid var(--rule); border-radius:8px; background:var(--surface); box-shadow:var(--shadow)}
+table{border-collapse:collapse; width:100%; font-size:14.2px; min-width:560px}
+th,td{text-align:left; padding:11px 16px; border-bottom:1px solid var(--rule); vertical-align:top}
+thead th{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:600;
+  background:var(--surface-2); border-bottom:1px solid var(--rule-2); white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:none}
+td.num, td.mono{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap; font-size:13px}
+.yes{color:var(--ok); font-weight:600}
+.no{color:var(--crit); font-weight:600}
+
+/* ---------- venue diagram ---------- */
+.lanes{display:flex; flex-direction:column; gap:14px; margin:26px 0}
+.lane{
+  display:grid; grid-template-columns:172px 1fr; gap:0;
+  border:1px solid var(--rule); border-radius:8px; overflow:hidden;
+  background:var(--surface); box-shadow:var(--shadow);
+}
+.lane-label{
+  background:var(--surface-2); padding:16px 18px; border-right:1px solid var(--rule);
+  display:flex; flex-direction:column; gap:4px; justify-content:center;
+}
+.lane-label .lname{font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:600; letter-spacing:.02em}
+.lane-label .lmeta{font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-3); line-height:1.4}
+.lane-body{padding:14px 18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.step{
+  font-size:13px; padding:6px 12px; border-radius:6px;
+  background:var(--paper); border:1px solid var(--rule-2);
+}
+.step.gpu{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:500}
+.step.block{border-color:var(--crit); background:var(--crit-soft); color:var(--crit); font-weight:500}
+.arr{color:var(--ink-3); font-size:13px; user-select:none}
+
+/* ---------- code ---------- */
+pre{
+  background:var(--surface); color:var(--ink); border:1px solid var(--rule);
+  border-radius:8px; padding:18px 20px; overflow-x:auto; margin:20px 0;
+  font-family:"IBM Plex Mono",monospace; font-size:12.8px; line-height:1.62;
+  box-shadow:var(--shadow);
+}
+pre .c{color:var(--ink-3)}
+pre .k{color:var(--accent); font-weight:500}
+pre .s{color:var(--ok)}
+pre .w{color:var(--crit)}
+
+/* ---------- phases ---------- */
+.phase{
+  display:grid; grid-template-columns:96px 1fr; gap:0;
+  border:1px solid var(--rule); border-radius:8px; overflow:hidden;
+  background:var(--surface); box-shadow:var(--shadow); margin-bottom:14px;
+}
+.phase-num{
+  background:var(--surface-2); border-right:1px solid var(--rule);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:18px 8px;
+}
+.phase-num .pn{font-family:Newsreader,serif; font-size:2rem; line-height:1; color:var(--accent); font-weight:500}
+.phase-num .pw{font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3)}
+.phase-body{padding:18px 22px}
+.phase-body h3{margin:0 0 6px; font-size:1.02rem}
+.phase-body p{margin:0 0 8px; font-size:14.6px}
+.owner{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em;
+  color:var(--ink-3); text-transform:uppercase;
+}
+.owner b{color:var(--accent); font-weight:600}
+
+/* ---------- details ---------- */
+details{border:1px solid var(--rule); border-radius:8px; background:var(--surface); margin:18px 0; box-shadow:var(--shadow)}
+summary{padding:14px 20px; cursor:pointer; font-weight:600; font-size:14.6px; list-style:none; display:flex; justify-content:space-between; gap:12px; align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+"; font-family:"IBM Plex Mono",monospace; color:var(--ink-3); font-size:17px}
+details[open] summary::after{content:"\2212"}
+details[open] summary{border-bottom:1px solid var(--rule)}
+.dbody{padding:16px 20px 4px}
+.dbody pre, .dbody .tw{margin-top:0}
+
+/* ---------- footnote ---------- */
+.prov{
+  background:var(--surface-2); border:1px solid var(--rule); border-radius:8px;
+  padding:20px 24px; margin-top:26px; font-size:14.2px; color:var(--ink-2);
+}
+.prov p{max-width:74ch}
+.prov b{color:var(--ink)}
+.pv{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; padding:2px 7px; border-radius:4px; white-space:nowrap;
+}
+.pv.v{color:var(--ok); background:var(--ok-soft); border:1px solid var(--ok)}
+.pv.b{color:var(--warn); background:var(--warn-soft); border:1px solid var(--warn)}
+
+@media (max-width:640px){
+  .wrap{padding:0 18px 80px}
+  .lane,.phase{grid-template-columns:1fr}
+  .lane-label{border-right:none; border-bottom:1px solid var(--rule); flex-direction:row; gap:10px; align-items:baseline}
+  .phase-num{border-right:none; border-bottom:1px solid var(--rule); flex-direction:row; gap:10px}
+  .shead{gap:8px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <div class="eyebrow">
+    <span>CAIR Summer 2026</span><i class="dot"></i>
+    <span>Design Review</span><i class="dot"></i>
+    <span>26 Aug 2026</span>
+  </div>
+  <h1>Structure or Frequency</h1>
+  <p class="standfirst">A review of the AlphaMissense&nbsp;&times;&nbsp;ESM-1v disagreement study, plus the compute plan to actually run it. The core idea is publishable. As currently specified, <b>the central question is not identifiable from the data</b> &mdash; and one of the two models was never going to run locally in the first place.</p>
+</header>
+
+<section>
+  <div class="shead"><div class="snum">00</div><h2>Read this before anything else</h2></div>
+
+  <div class="callout crit">
+    <span class="tag">Premise correction</span>
+    <p><strong>AlphaMissense cannot be run locally, or on Hoffman2, or anywhere.</strong> DeepMind released the data-pipeline and model code as an implementation reference, but explicitly <em>did not release the trained weights</em>. What they released instead is the precomputed score for every possible human missense variant &mdash; all ~71M of them.</p>
+    <p>So the pipeline is <b>one model you run</b> (ESM-1v) and <b>one model you look up</b> (AlphaMissense). This is good news: it halves the GPU work. It also relocates the hard part of this project from compute to data engineering, which is where the real schedule risk now lives.</p>
+  </div>
+
+  <div class="callout">
+    <span class="tag">Local blocker &mdash; fix on day one</span>
+    <p>The MacBook has <b>195&nbsp;MB free of 460&nbsp;GB</b>. Nothing in this project's data plan fits. <code>~/Downloads</code> (16&nbsp;GB) and <code>~/Library/Caches</code> (11&nbsp;GB) are the obvious reclaims. Regardless, bulk data belongs on <code>$SCRATCH</code>, not the laptop &mdash; the disk state just forces the correct architecture earlier than it otherwise would have.</p>
+  </div>
+
+  <div class="callout ok">
+    <span class="tag">Asset you already have</span>
+    <p><code>Reference_Repos/condenseq-esm-handoff</code> contains a working, hard-won Hoffman2 GPU scaffold: <code>env.sh</code>, <code>check_access.sh</code>, array-job templates with lockfile skip-guards, and a documented playbook of every dispatch failure mode on this cluster. <strong>Lift it wholesale.</strong> It encodes roughly a week of debugging you do not need to repeat. <code>tools/mmseqs</code> is also already installed, which covers the paralog-clustering step for the train/test splits.</p>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><div class="snum">01</div><h2>Where the design breaks</h2></div>
+
+  <div class="flaws">
+
+    <div class="flaw">
+      <div class="fhead"><span class="chip crit">Fatal</span><h3>The AM&nbsp;vs&nbsp;ESM-1v contrast confounds three variables at once</h3></div>
+      <p>The plan frames this as a two-way choice: structure (A) versus frequency prior (B). But these two models differ along <em>three</em> axes simultaneously, and every disagreement you observe is jointly caused by all three.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Predictor</th><th>Structure</th><th>Explicit MSA</th><th>Frequency supervision</th></tr></thead>
+        <tbody>
+          <tr><td><strong>AlphaMissense</strong></td><td class="yes">yes</td><td class="yes">yes &mdash; AF2 Evoformer</td><td class="yes">yes</td></tr>
+          <tr><td><strong>ESM-1v</strong></td><td class="no">no</td><td class="no">no &mdash; single sequence</td><td class="no">no</td></tr>
+        </tbody>
+      </table></div>
+      <p>With one contrast and three differences, no downstream feature-importance analysis can separate them. This is an identification problem in the experimental design, not a statistical problem you can model your way out of.</p>
+      <p><strong>The fix is cheap, and it is the single highest-value change to the plan.</strong> Add predictors that break the confound &mdash; all have precomputed scores you can download, so the marginal cost is disk, not GPU:</p>
+      <ul>
+        <li><strong>EVE</strong> or <strong>GEMME</strong> &mdash; MSA-based, <em>no</em> structure, <em>no</em> frequency supervision</li>
+        <li><strong>PrimateAI-3D</strong> &mdash; structure + frequency supervision, different architecture</li>
+      </ul>
+      <p>Now <code>AM &minus; EVE</code> isolates roughly (structure + frequency supervision) with MSA held constant, and <code>EVE &minus; ESM-1v</code> isolates the alignment axis. The headline contrast stops being "one model minus another model" and becomes a real factorial design.</p>
+    </div>
+
+    <div class="flaw">
+      <div class="fhead"><span class="chip crit">Fatal</span><h3>Your labels are themselves frequency-derived</h3></div>
+      <p>ACMG classification criteria <strong>BA1 and BS1 assign "benign" on the basis of gnomAD allele frequency</strong> exceeding a threshold. A large share of ClinVar's benign calls are benign <em>because</em> they are common.</p>
+      <p>The consequence is severe: gnomAD frequency will predict the label, predict AlphaMissense, and predict AM&ndash;ESM disagreement &mdash; all through the label, not through AlphaMissense's fine-tuning. <strong>Step 3 as specified will report "the confound group dominates" regardless of which explanation is true.</strong></p>
+      <p>Two things follow. First, <code>ClinVar density</code> does not belong in the confound group at all &mdash; AlphaMissense did not train on ClinVar, so it is a confound of your <em>labels</em>, not of the model. Keep it, but label it as an ascertainment covariate. Second, you need a label source with no frequency signal in it:</p>
+      <div class="callout ok" style="margin:18px 0 6px">
+        <span class="tag">The fix</span>
+        <p>Use <strong>ProteinGym / MaveDB</strong> deep-mutational-scanning data as a second primary evaluation set. DMS fitness scores are experimental measurements &mdash; uncontaminated by allele frequency and by which genes clinicians happened to sequence. When AM and ESM disagree, ask <em>which one is right against the experiment</em>, stratified by structure. That question is identifiable; the ClinVar-only version is not.</p>
+      </div>
+    </div>
+
+    <div class="flaw">
+      <div class="fhead"><span class="chip warn">Major</span><h3>Permutation importance cannot answer "how much is attributable"</h3></div>
+      <p>Adding noise to a feature and measuring the performance drop measures <em>unique non-redundant predictive contribution within one fitted model</em>. It is not causal attribution, and under correlated features it is unstable &mdash; repeated runs will give different answers.</p>
+      <p>Your two groups are correlated by construction. Buried residues are conserved. Disordered regions are unconstrained. Worse: <strong>conservation belongs in both groups, not the confound group.</strong> AlphaMissense sees conservation through its MSA path, and ESM-1v encodes it implicitly &mdash; masked marginals <em>are</em> a learned evolutionary prior over UniRef. Calling conservation importance "evidence for Explanation B" is a misattribution.</p>
+      <p>Replace with: <strong>grouped conditional permutation</strong> (permute the structural block jointly, within strata of the confound block); <strong>LOCO with refitting</strong> rather than noise injection on a fixed model; and report the variance decomposition as a Venn &mdash; structure-only, confound-only, and the shared overlap.</p>
+      <div class="callout" style="margin:18px 0 6px">
+        <p>If the overlap is 60%, <b>that is your result</b>. "The majority of AM&ndash;ESM disagreement cannot be attributed to structure or frequency separately, because they are collinear at residue level" is a real, publishable, honest finding. Do not let the analysis manufacture a split that is not in the data.</p>
+      </div>
+    </div>
+
+    <div class="flaw">
+      <div class="fhead"><span class="chip warn">Major</span><h3>Step 2's comparison is circular</h3></div>
+      <p>Your structure-only model is trained on ClinVar. AlphaMissense and ESM-1v are not. Comparing their AUROCs on the same test set is not apples-to-apples, and your model will look artificially competitive. It can also reach AUROC&nbsp;~0.75 largely by memorising "this gene's known hotspot domain" &mdash; Fawzy &amp; Marsh's circularity concern, operating at residue level.</p>
+      <p>Mitigations: gene-held-out splits (you have this); report <strong>macro-averaged per-gene AUROC, not pooled AUROC</strong>, since pooled is dominated by between-gene base-rate variation; and add a <strong>gene-identity-only baseline</strong>. If gene-ID-only gets 0.70 and your structural model gets 0.74, you have learned almost nothing about structure.</p>
+    </div>
+
+  </div>
+
+  <details>
+    <summary>Six smaller problems worth fixing</summary>
+    <div class="dbody">
+      <h3>25 genes is too few</h3>
+      <p>With gene-held-out CV your effective <em>n</em> for variance purposes is ~25, and ClinVar's confident labels are extraordinarily gene-skewed &mdash; BRCA1/2, CFTR, TP53 and the mismatch-repair genes will supply most of it. Confidence intervals on AUROC differences will be uselessly wide. There is no compute reason for the limit, since AM scores are precomputed and AlphaFold DB ships the whole human proteome. <strong>Target 300&ndash;500 genes;</strong> keep 25 well-characterised genes as a sensitivity analysis.</p>
+
+      <h3>The score scales are not comparable</h3>
+      <p>AlphaMissense outputs a calibrated pathogenicity probability with published cutoffs; ESM-1v outputs an unbounded log-likelihood ratio whose scale depends on the protein's MSA entropy and family depth. Raw disagreement is partly a calibration artifact. <strong>Rank-normalise both within protein before comparing.</strong> Non-negotiable.</p>
+
+      <h3>Define disagreement continuously, and keep the sign</h3>
+      <p>Binary agree/disagree after arbitrary thresholding throws away most of the signal. Use the <strong>signed residual of within-protein ESM rank regressed on within-protein AM rank</strong>. Sign matters: "AM says pathogenic, ESM does not" is a different phenomenon from the reverse, and collapsing them will cancel real effects.</p>
+
+      <h3>MSA depth is probably your largest single driver, and it is in neither group</h3>
+      <p>ESM-1v degrades on shallow-family and rarely-observed proteins; AlphaMissense has an explicit alignment. Compute Neff per protein and put it in the model. If it dominates both groups, that is an important negative result about the A-vs-B framing itself.</p>
+
+      <h3>ESM-1v's 1022-token limit will manufacture fake disagreement</h3>
+      <p>Proteins longer than that must be cropped, and the score depends on how. Use a fixed-size window centred on the variant, and <strong>record a <code>cropped</code> flag on every row</strong> &mdash; cropped variants will generate spurious disagreement and you need to be able to stratify it out.</p>
+
+      <h3>Gene-level splitting is necessary but not sufficient</h3>
+      <p>Paralogs leak across the split. Cluster by sequence identity with <code>mmseqs2</code> at ~30% (already installed in <code>tools/</code>) or at minimum by Pfam family, and split on clusters.</p>
+
+      <h3>One concern in the original plan is misdirected</h3>
+      <p>"Can we reliably compare feature attribution when ESM is hard to interpret?" &mdash; you never need to interpret ESM's internals. It is an outcome variable here, not something you are explaining. The real attribution problem is collinearity among your features, above.</p>
+    </div>
+  </details>
+</section>
+
+<section>
+  <div class="shead"><div class="snum">02</div><h2>The revised question</h2></div>
+  <div class="callout">
+    <span class="tag">Reframed</span>
+    <p style="font-family:Newsreader,Georgia,serif; font-size:1.2rem; line-height:1.45; color:var(--ink)">When structure-aware and sequence-only predictors disagree about a missense variant, <b>which one is right</b> &mdash; and does the answer depend on the residue's structural context in a way that survives conditioning on evolutionary constraint and allele frequency?</p>
+  </div>
+  <p>That version is identifiable. The original &mdash; "how much of the disagreement can be attributed to structural features" &mdash; is not, for the reasons in 01.</p>
+
+  <div class="phase">
+    <div class="phase-num"><span class="pn">0</span><span class="pw">Week 1</span></div>
+    <div class="phase-body">
+      <h3>Feasibility spike</h3>
+      <p>Before anyone builds a dataset: download the AM table, pull five AlphaFold structures, run SASA/DSSP, score five proteins with ESM-1v, and produce one fully joined row end to end. Every downstream decision depends on this working. Also audit what is already precomputed &mdash; if ProteinGym ships ESM-1v scores, some GPU work disappears entirely.</p>
+      <p class="owner">Owner &mdash; <b>Ihyun</b></p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-num"><span class="pn">1</span><span class="pw">Data</span></div>
+    <div class="phase-body">
+      <h3>Build the joined variant table</h3>
+      <p>ClinVar &ge;2-star P/LP vs B/LB, <strong>MANE Select transcripts only</strong>. Scores: AlphaMissense, ESM-1v, <em>plus EVE/GEMME and PrimateAI-3D</em>. Structure from AlphaFold DB: DSSP 3-state, RSA (Tien&nbsp;et&nbsp;al. max-ASA normalisation), pLDDT, <strong>weighted contact number</strong> (better-behaved than RSA), distance to nearest UniProt functional site, Pfam domain membership. Covariates: gnomAD AF and observed/unobserved status, LOEUF, regional missense constraint, Neff, ClinVar density, protein length, crop flag. Second label set: ProteinGym DMS. 300+ genes.</p>
+      <p class="owner">Owners &mdash; <b>Labels owner</b> (ClinVar, labels) &middot; <b>Ihyun</b> (scores, structure, joins)</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-num"><span class="pn">2</span><span class="pw">Baseline</span></div>
+    <div class="phase-body">
+      <h3>Structure-only classifier, honestly benchmarked</h3>
+      <p>Gene-held-out grouped CV, macro-averaged per-gene AUROC, bootstrap-over-genes CIs, against a gene-ID-only null. The question is not "can structure predict pathogenicity" (weakly, yes) &mdash; it is "does structure add anything over the gene-level prior."</p>
+      <p class="owner">Owner &mdash; <b>Baseline owner</b> &middot; ties to Fawzy &amp; Marsh 2024</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-num"><span class="pn">3</span><span class="pw">Core</span></div>
+    <div class="phase-body">
+      <h3>Which model is right, stratified by structure</h3>
+      <p>On the DMS set, restrict to disagreement cases and ask which predictor better tracks experimental fitness, stratified by buried/exposed, ordered/disordered, high/low pLDDT. <strong>This is the experiment that actually adjudicates A vs B</strong>, and it is clean because DMS labels carry no frequency signal. This is also your minimum publishable result.</p>
+      <p class="owner">Owner &mdash; <b>DMS owner</b> &middot; ties to Fawzy &amp; Marsh 2025</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-num"><span class="pn">4</span><span class="pw">Model</span></div>
+    <div class="phase-body">
+      <h3>Disagreement model with honest attribution</h3>
+      <p>Predict the signed, rank-normalised disagreement residual. Grouped conditional permutation importance, LOCO refitting, and a reported variance decomposition with the unattributable overlap made explicit rather than silently split.</p>
+      <p class="owner">Owner &mdash; <b>Modelling owner</b> &middot; ties to Jonsson 2026</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-num"><span class="pn">5</span><span class="pw">Stress</span></div>
+    <div class="phase-body">
+      <h3>Confound stress test</h3>
+      <p>Stratify everything by gnomAD-observed vs unobserved. Explanation&nbsp;B predicts the structural stratification collapses once frequency status is conditioned on; Explanation&nbsp;A predicts it survives. Repeat on the DMS set as the frequency-free replication.</p>
+      <p class="owner">Owner &mdash; <b>Ihyun</b></p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="tag">Scope</span>
+    <p>As originally written this is roughly 2&times; what five students finish in a summer. The staged version above has a defensible result at the end of Phase&nbsp;3, with Phases 4&ndash;5 as upside rather than as load-bearing.</p>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><div class="snum">03</div><h2>What runs where</h2></div>
+  <p>Four venues, and the assignment is not negotiable &mdash; Hoffman2 login nodes are thread-capped and will OOM on model downloads, which is a documented failure in the condenseq playbook.</p>
+
+  <div class="lanes">
+    <div class="lane">
+      <div class="lane-label"><span class="lname">MacBook M3 Pro</span><span class="lmeta">195 MB free &mdash; fix first</span></div>
+      <div class="lane-body">
+        <span class="step">write code</span><span class="arr">&rarr;</span>
+        <span class="step">DuckDB on parquet</span><span class="arr">&rarr;</span>
+        <span class="step">sklearn models</span><span class="arr">&rarr;</span>
+        <span class="step">figures</span>
+        <span class="step block">never: bulk downloads</span>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-label"><span class="lname">h2 login node</span><span class="lmeta">metadata only<br>threads capped to 1</span></div>
+      <div class="lane-body">
+        <span class="step">qsub / qstat</span><span class="arr">&rarr;</span>
+        <span class="step">check_access.sh</span><span class="arr">&rarr;</span>
+        <span class="step">rsync code</span>
+        <span class="step block">never: downloads, tokenizers, training</span>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-label"><span class="lname">h2 CPU array</span><span class="lmeta">-pe shared 4<br>h_data=8G</span></div>
+      <div class="lane-body">
+        <span class="step">fetch AM + AFDB + dbNSFP</span><span class="arr">&rarr;</span>
+        <span class="step">SASA / DSSP over ~20k structures</span><span class="arr">&rarr;</span>
+        <span class="step">DuckDB joins &rarr; parquet</span>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-label"><span class="lname">h2 GPU</span><span class="lmeta">-l gpu,A100,cuda=1<br>the only GPU step</span></div>
+      <div class="lane-body">
+        <span class="step gpu">ESM-1v masked marginals &times;5 models</span><span class="arr">&rarr;</span>
+        <span class="step">per-shard parquet</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout crit">
+    <span class="tag">Environment trap &mdash; will cost a day if missed</span>
+    <p>Your <code>ml_dev</code> env has <code>esm 3.2.1</code> installed. That is EvolutionaryScale's <strong>ESM-3</strong> package, not <code>fair-esm</code>, which is what provides the ESM-1v checkpoints. <strong>Both import as <code>esm</code></strong> and cannot coexist.</p>
+    <p>Sidestep it entirely: load ESM-1v through HuggingFace <code>transformers</code> as <code>EsmForMaskedLM</code> from <code>facebook/esm1v_t33_650M_UR90S_{1..5}</code>. This avoids the namespace collision <em>and</em> reuses the proven <code>HF_HOME=$SCRATCH/hf_cache</code> + <code>HF_HUB_OFFLINE=1</code> caching pattern already working in the condenseq scaffold. Build a fresh <code>~/venvs/vep</code>; do not extend <code>ml_dev</code>.</p>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><div class="snum">04</div><h2>Data acquisition</h2></div>
+  <p>Sizes are estimates &mdash; verify each before committing scratch quota. Everything above ~1&nbsp;GB lands on <code>$SCRATCH</code>, which for this account is <code>/u/scratch/i/ijeon</code>.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Resource</th><th>What it gives you</th><th>Est. size</th><th>Lands on</th></tr></thead>
+    <tbody>
+      <tr><td><code>AlphaMissense_aa_substitutions.tsv.gz</code></td><td>AM score for every UniProt aa substitution</td><td class="num">~1&ndash;3 GB gz</td><td class="mono">$SCRATCH</td></tr>
+      <tr><td><code>AlphaMissense_hg38.tsv.gz</code></td><td>Genome-coordinate keyed &mdash; needed for the ClinVar join</td><td class="num">~2&ndash;5 GB gz</td><td class="mono">$SCRATCH</td></tr>
+      <tr><td><strong>dbNSFP 5.x</strong></td><td><strong>Highest-leverage single download.</strong> Bundles per-variant gnomAD AF, phyloP/phastCons/GERP conservation, and EVE / REVEL / PrimateAI scores in one coordinate-keyed file &mdash; collapses six separate acquisition tasks into one.</td><td class="num">~30&ndash;60 GB</td><td class="mono">$SCRATCH</td></tr>
+      <tr><td>AlphaFold human proteome v4</td><td>Structures + pLDDT. <strong>Take PDB only, skip the PAE files</strong> &mdash; they are the bulk of the tarball and you do not need them.</td><td class="num">~5&ndash;8 GB</td><td class="mono">$SCRATCH</td></tr>
+      <tr><td>ESM-1v &times;5 HF checkpoints</td><td>The only model you actually run</td><td class="num">~2.5 GB &times; 5</td><td class="mono">$SCRATCH/hf_cache</td></tr>
+      <tr><td>ProteinGym DMS substitutions</td><td>Frequency-free ground truth &mdash; Phase 3 depends on this</td><td class="num">~1&ndash;2 GB</td><td class="mono">$SCRATCH</td></tr>
+      <tr><td>ClinVar <code>variant_summary.txt.gz</code></td><td>Labels + review status (star ratings)</td><td class="num">~100 MB</td><td class="mono">local ok</td></tr>
+      <tr><td>gnomAD constraint metrics</td><td>LOEUF, gene-level. <strong>Do not download gnomAD VCFs</strong> &mdash; terabytes, and dbNSFP already carries per-variant AF.</td><td class="num">~10 MB</td><td class="mono">local ok</td></tr>
+      <tr><td>MANE Select summary</td><td>The pivot for every ID join</td><td class="num">~10 MB</td><td class="mono">local ok</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout crit">
+    <span class="tag">The bug that will silently corrupt everything</span>
+    <p>Four ID systems have to line up: ClinVar (RefSeq transcript coords) &harr; AlphaMissense (UniProt + genome coords) &harr; AlphaFold (UniProt accession) &harr; ESM-1v (whatever sequence you feed it). MANE Select is the pivot, but transcript-version drift, isoform mismatch and 0/1-indexing errors all fail <em>quietly</em>.</p>
+    <p>One assertion catches nearly all of them. Run it on every joined row, count and log the failures, and never let it be a warning:</p>
+    <pre><span class="c"># the single most valuable test in this project</span>
+<span class="k">assert</span> af_seq[pos-<span class="s">1</span>] == clinvar_ref_aa == am_ref_aa, (uniprot, pos)</pre>
+    <p>If more than a few percent of rows fail, your join is wrong &mdash; do not proceed to modelling on the survivors, because the survivors are a biased subset.</p>
+  </div>
+
+  <p>Use <strong>DuckDB</strong> for every join. It reads gzipped TSV directly, spills out-of-core, and writes parquet &mdash; a 71M-row join in pandas will thrash on any machine you have. Predicate-push your gene list down into the scan and the AM tables become tractable even on the laptop.</p>
+</section>
+
+<section>
+  <div class="shead"><div class="snum">05</div><h2>Running ESM-1v on Hoffman2</h2></div>
+
+  <h3>The optimisation that sets your whole budget</h3>
+  <p>One masked forward pass at position <em>i</em> returns the full 20-amino-acid log-probability vector at <em>i</em> &mdash; which means <strong>every variant at that residue comes free.</strong> Cost therefore scales with <em>unique (protein, position) pairs</em>, not with variant count. Cache the full vector, never a single score.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Quantity</th><th>Estimate</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Unique (protein, position) pairs, 300&ndash;500 genes</td><td class="num">~30&ndash;60k</td><td>drives everything below</td></tr>
+      <tr><td>Masked forward passes (&times;5 ensemble)</td><td class="num">~150&ndash;300k</td><td>batched ~16 seqs &times; ~1k tokens</td></tr>
+      <tr><td><strong>Total GPU time, full ensemble</strong></td><td class="num">~5&ndash;15 h</td><td>on one A100; measure on 5 proteins first</td></tr>
+      <tr><td>Wall time as a <code>-t 1-20</code> array</td><td class="num">&lt; 1 h</td><td>embarrassingly parallel by protein</td></tr>
+    </tbody>
+  </table></div>
+  <p>This is a small job. If your pilot extrapolates to hundreds of GPU-hours, something is wrong &mdash; most likely you are re-running masked passes per variant instead of per position.</p>
+
+  <h3>Cluster specifics, from the condenseq playbook</h3>
+  <div class="callout crit">
+    <span class="tag">Two rules that cost real days last time</span>
+    <p><strong>Never pass <code>-q</code> on a GPU job.</strong> A queue list combined with a generic <code>-l gpu</code> is a conflicting request and the job sits in <code>qw</code> indefinitely with no error message. Request the GPU model through <code>-l</code> instead. (IDRE ticket #100868426.)</p>
+    <p><strong>Do not pass <code>highp</code> unless you are in the group ACL.</strong> A non-member's job waits forever, silently. Ihyun's <code>highp</code> access comes from the <em>Kappel</em> allocation &mdash; CAIR teammates on their own accounts almost certainly do not have it. <strong>Default the whole team to the public queue</strong> and let anyone who has <code>highp</code> opt in explicitly. Verify with <code>bash hoffman2/check_access.sh</code> before trusting it.</p>
+  </div>
+
+  <pre><span class="c"># the request that works</span>
+qsub -t 1-20 -l gpu,A100,cuda=<span class="s">1</span> hoffman2/esm1v_score.qsub
+
+<span class="c"># free GPUs right now &mdash; qstat -g c shows free CPU slots, which is not the</span>
+<span class="c"># same thing. The cuda RSMAP consumable is what qw actually waits on.</span>
+ssh hoffman2 <span class="s">"qhost -F cuda | awk '/^g/{h=\$1} /hc:cuda=[1-9]/{print h,\$0}'"</span>
+
+<span class="c"># will this job EVER run? ('no suitable queues' = disabled queue or ACL)</span>
+qalter -w v &lt;jobid&gt;</pre>
+
+  <details>
+    <summary>Job script skeleton &mdash; adapted from the condenseq template</summary>
+    <div class="dbody">
+      <pre><span class="c">#!/bin/bash</span>
+<span class="c">#$ -S /bin/bash</span>
+<span class="c">#$ -cwd -j y</span>
+<span class="c">#$ -o logs/esm1v.$JOB_ID.$TASK_ID.out</span>
+<span class="c">#$ -l h_rt=8:00:00</span>
+<span class="c">#$ -l h_data=10G</span>
+<span class="c">#$ -pe shared 4</span>
+<span class="c">#$ -N esm1v</span>
+<span class="c"># submit: qsub -t 1-20 -l gpu,A100,cuda=1 hoffman2/esm1v_score.qsub</span>
+<span class="k">set</span> -euo pipefail
+
+<span class="k">export</span> HF_HOME=<span class="s">"$SCRATCH/hf_cache"</span>
+<span class="k">export</span> HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1   <span class="c"># pre-cache in a CPU job first</span>
+<span class="k">export</span> OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4
+<span class="k">export</span> PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+SHARD=<span class="s">"$SGE_TASK_ID"</span>
+OUT=<span class="s">"$SCRATCH/vep/esm1v/shard_${SHARD}.parquet"</span>
+
+<span class="c"># skip-guard + lockfile: lets you broaden to other GPU models with a second</span>
+<span class="c"># array without duplicating work</span>
+[ -f <span class="s">"$OUT"</span> ] &amp;&amp; { <span class="k">echo</span> <span class="s">"[skip] $OUT"</span>; <span class="k">exit</span> 0; }
+LOCK=<span class="s">"$OUT.lock"</span>; mkdir <span class="s">"$LOCK"</span> 2&gt;/dev/null || { <span class="k">echo</span> <span class="s">"[skip] claimed"</span>; <span class="k">exit</span> 0; }
+<span class="k">trap</span> <span class="s">'rmdir "$LOCK" 2&gt;/dev/null || true'</span> EXIT
+
+<span class="s">"$HOME/venvs/vep/bin/python"</span> scripts/esm1v_masked_marginals.py \
+    --positions <span class="s">"$SCRATCH/vep/positions.parquet"</span> \
+    --shard <span class="s">"$SHARD"</span> --n-shards 20 \
+    --models facebook/esm1v_t33_650M_UR90S_{1,2,3,4,5} \
+    --window 1022 --batch-size 16 --out <span class="s">"$OUT"</span></pre>
+      <p style="margin-top:14px">Output schema per row: <code>uniprot</code>, <code>pos</code>, <code>wt_aa</code>, <code>model_idx</code>, the 20 log-probs, and <code>cropped</code> / <code>window_start</code>. Ensemble at analysis time as the mean over <code>model_idx</code> of <code>logp[mut] &minus; logp[wt]</code> &mdash; keeping per-model scores lets you report ensemble variance, which is itself a useful uncertainty signal for the disagreement analysis.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Setup order &mdash; first week, in sequence</summary>
+    <div class="dbody">
+      <ol>
+        <li>Reclaim laptop disk. Nothing works until this is done.</li>
+        <li><code>ssh hoffman2</code>, run <code>bash hoffman2/check_access.sh</code> from a copy of the condenseq scaffold. Record which GPU models are reachable and whether <code>highp</code> applies to each team member.</li>
+        <li>Create <code>~/venvs/vep</code>: <code>torch</code>, <code>transformers</code>, <code>protobuf</code> (the tokenizer needs it and the failure message does not say so), <code>duckdb</code>, <code>pyarrow</code>, <code>biotite</code>, <code>biopython</code>.</li>
+        <li>Submit a CPU job to pre-cache all five ESM-1v checkpoints into <code>$SCRATCH/hf_cache</code>. <strong>Not on the login node</strong> &mdash; it OOMs on the downloader.</li>
+        <li>Verify an offline load on a compute node via <code>qrsh -l gpu,A100,cuda=1,h_rt=2:00:00,h_data=8G -pe shared 4</code> before submitting any array.</li>
+        <li>Run the Phase-0 spike on five proteins. Measure real GPU seconds per position and extrapolate before committing to the full run.</li>
+      </ol>
+      <p>Note for the analysis stage: per your global working preferences, pin <code>OMP_NUM_THREADS=1 MKL_NUM_THREADS=1</code> for the small-matrix sklearn work on the laptop. Inside a Hoffman2 job the opposite applies &mdash; match threads to <code>$NSLOTS</code>, which <code>env.sh</code> already handles.</p>
+    </div>
+  </details>
+</section>
+
+<section>
+  <div class="shead"><div class="snum">06</div><h2>Provenance</h2></div>
+  <div class="prov">
+    <p><span class="pv v">verified</span> &nbsp;<b>this session, against the source.</b> AlphaMissense weights were not released &mdash; the code is an implementation reference and predictions are distributed precomputed via Zenodo and <code>gs://dm_alphamissense</code>. ESM-1v is available as five HuggingFace checkpoints <code>facebook/esm1v_t33_650M_UR90S_1&ndash;5</code>, loadable with <code>EsmForMaskedLM</code>. Local environment facts &mdash; disk state, <code>ml_dev</code> contents, the <code>esm 3.2.1</code> collision, <code>mmseqs</code> availability &mdash; were read directly off this machine. All Hoffman2 specifics (GPU request syntax, the <code>-q</code> dispatch bug, login-node limits, <code>$SCRATCH</code> layout, the <code>highp</code>/ACL behaviour) come from the <code>condenseq-esm-handoff</code> playbook in <code>Reference_Repos</code>.</p>
+    <p style="margin-bottom:0"><span class="pv b">background</span> &nbsp;<b>from training, not checked against sources.</b> AlphaMissense's architecture and fine-tuning scheme; ESM-1v's context limit and masked-marginals scoring; ACMG BA1/BS1 frequency criteria; ProteinGym and dbNSFP coverage and file sizes; Tien&nbsp;et&nbsp;al. max-ASA normalisation. The claims attributed to Fawzy&nbsp;&amp;&nbsp;Marsh and Jonsson come from the project brief's own summaries, not from reading those papers &mdash; <strong>whoever owns each paper should confirm them</strong>, particularly the macro-vs-pooled-AUROC point credited to Fawzy&nbsp;&amp;&nbsp;Marsh 2024.</p>
+  </div>
+</section>
+
+</div>

@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# Data. ~3.6 GB of acquired atlases + one dangling symlink to the LaCie.
+# All of it is regenerable from the commands in data/README.md, which IS
+# tracked. Nothing under data/ is committed except that log and the small
+# derived spike outputs whitelisted below.
+# ---------------------------------------------------------------------------
+data/*
+!data/README.md
+
+# Phase 0 spike outputs: ~1.6 MB of derived parquet. Tracked so the reported
+# AUROCs can be re-checked without re-downloading 3.6 GB of source atlases.
+!data/spike/
+data/spike/**
+!data/spike/*.parquet
+!data/spike/*.json
+!data/spike/hoffman2/
+!data/spike/hoffman2/*.parquet
+
+# Never commit source atlases even if a path above is loosened.
+*.tsv.gz
+*.txt.gz
+*.pdb
+eve_bulk.zip
+
+# Local Claude Code state (machine-specific permissions, not project config)
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Cluster job output
+*.o[0-9]*
+*.e[0-9]*
+*.po[0-9]*
+*.pe[0-9]*
+
+# macOS
+.DS_Store
