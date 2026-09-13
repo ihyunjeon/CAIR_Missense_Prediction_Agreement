@@ -166,8 +166,7 @@ def feats_for(row):
     ca = arr[arr.atom_name == "CA"]
     xyz = ca.coord
     d = np.linalg.norm(xyz[:, None, :] - xyz[None, :, :], axis=-1)
-    wcn = (1.0/np.clip(d, 1e-6, None)**2).sum(1) - 1e12*0  # self term excluded below
-    np.fill_diagonal(d, np.inf)
+    np.fill_diagonal(d, np.inf)      # drop the self term before inverting
     wcn = (1.0/d**2).sum(1)
     return row.uniprot_id, {
         "plddt": dict(zip(ca.res_id.tolist(), ca.b_factor.tolist())),

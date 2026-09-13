@@ -433,14 +433,26 @@ it alone is a third of the cohort — structural stratification on this five-gen
 set will be dominated by one poorly-ordered protein. Widen the gene set before
 reading anything into buried/exposed contrasts.
 
-## Still to acquire
+## Acquisition status
 
-- ClinVar `variant_summary.txt.gz` (labels, ≥2-star) — Baseline owner
-- AlphaFold human proteome v4, PDB only, skip PAE — structural features
-- ProteinGym substitutions (DMS ground truth, ships ESM-1v + AM scores) — Labels owner
-- PrimateAI-3D (**license registration required — start early**)
+Acquired and in use:
+
+- ClinVar `variant_summary.txt.gz` (labels, ≥2-star) — 422 MB
+- MANE Select summary — v1.5, used only to *rank* transcripts
+- AlphaMissense hg38 + aa_substitutions parquet
+- EVE `eve_variants.parquet` + `eve_msa_depth.parquet`
+- AlphaFold structures — fetched per gene by `scripts/trial/trial_01_genes.py`,
+  **v6, resolved per accession from the API**. Not the bulk proteome tarball;
+  the plan's "human proteome v4" is superseded (the _v4 URLs 404).
+
+Still to acquire:
+
+- ProteinGym substitutions (DMS ground truth, ships ESM-1v + AM scores).
+  Phase 3 depends on this and it needs no GPU — highest-value next download.
+- PrimateAI-3D (**license registration required — start early**, it is the
+  long pole on a full Phase 1)
 - ESM-IF1 scores (via ProteinGym) — fills the structure-only cell
-- MANE Select summary, gnomAD constraint metrics
+- gnomAD constraint metrics (LOEUF, gene-level; ~10 MB, do NOT pull gnomAD VCFs)
 
 ## Trial Phase 1 + 2 (2026-09-12) — 150-gene scale-up
 
