@@ -16,6 +16,14 @@ data/spike/**
 !data/spike/hoffman2/
 !data/spike/hoffman2/*.parquet
 
+# Trial Phase 1/2 outputs: ~2.6 MB of derived parquet + the gene manifest.
+# Regenerable in about two minutes, tracked so the Phase 2 table is checkable.
+!data/trial/
+data/trial/**
+!data/trial/*.parquet
+!data/trial/*.json
+!data/trial/*.csv
+
 # Never commit source atlases even if a path above is loosened.
 *.tsv.gz
 *.txt.gz

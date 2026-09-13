@@ -441,3 +441,135 @@ reading anything into buried/exposed contrasts.
 - PrimateAI-3D (**license registration required — start early**)
 - ESM-IF1 scores (via ProteinGym) — fills the structure-only cell
 - MANE Select summary, gnomAD constraint metrics
+
+## Trial Phase 1 + 2 (2026-09-12) — 150-gene scale-up
+
+A deliberately undersized rehearsal of Phases 1 and 2, run end to end on the
+laptop in about three minutes. Scripts: `scripts/trial/trial_0{1,2,3}_*.py`.
+Outputs: `data/trial/`. **ESM-1v is not in this table** — at the measured
+2.571 s/position it would need ~5.5 h for this cohort's 7,673 unique positions,
+which is the Hoffman2 array's job, not the laptop's. Phase 2 is a structure-only
+baseline and does not need it.
+
+### Gene selection
+
+Selection is by ClinVar benign count, because benign is the scarce class and a
+per-gene AUROC without negatives is noise (the Phase 0 spike's PTEN 0.997 rested
+on 6). ClinVar is far richer than the spike implied: **2,906 genes have >=10
+two-star benign variants**, so ClinVar is not the binding constraint on gene-set
+size. AlphaFold availability is.
+
+| stage | genes |
+|---|---|
+| candidates (>=10 of both classes in ClinVar) | 360 |
+| resolved to a modal UniProt accession via AM | 356 |
+| lost: AlphaFold returned **isoform-only** entries | 27 |
+| lost: AlphaFold **404**, no prediction at all | 33 |
+| selected for the trial | 150 |
+
+### Two new AlphaFold traps, both silent
+
+1. **`/api/prediction/<acc>` can return only ISOFORM entries.** For NF1 the
+   endpoint returns `P21359-5` (593 aa), `P21359-4` (1,598 aa) and `P21359-3`
+   (551 aa) — and never canonical `P21359`, which is 2,839 aa. Taking `j[0]`
+   hands you a 593-residue structure while ClinVar and AlphaMissense positions
+   are on the 2,839-residue canonical, so every structural feature attaches to
+   the wrong residue with no error. **Accept only an entry whose
+   `uniprotAccession` equals the bare accession, with no `-N` suffix.**
+2. **Very long proteins 404 rather than returning fragments.** TTN (Q8WZ42,
+   34,350 aa) has no prediction at this endpoint at all. A `prot_len <= 2700`
+   filter intended to avoid AlphaFold's F1/F2 fragment splitting was therefore a
+   no-op — the long proteins had already been dropped as "API errors". Do not
+   mistake that for the filter working. The full run must handle fragments.
+
+### The assertion gate has to be split into hard and soft
+
+At five genes the reference-AA assertion passed 1,168/1,168 and looked binary.
+At 150 genes it drops to 93.6% — and most of that is not corruption.
+
+| check | rows | |
+|---|---|---|
+| AM ref == AlphaFold ref | 9,600 / 9,768 | 98.28% |
+| AM ref == ClinVar ref | 9,759 / 9,768 | 99.91% |
+| AM alt == ClinVar alt | 9,759 / 9,768 | 99.91% |
+| **all three (the hard gate)** | **9,595 / 9,768** | **98.23%** |
+| AM pos == ClinVar pos | 9,147 / 9,768 | 93.64% |
+
+The position check fails on 449 rows **where all three amino acids agree**. The
+offset is constant within a gene — MECP2 −12, RUNX1 −27, MEN1 +5, MBD5 −233,
+SPTAN1 −5 (constant in 9 of 12 affected genes) — because ClinVar's `Name` field
+cites a RefSeq isoform whose protein numbering differs from the UniProt
+canonical that AM and AlphaFold use. MECP2's e1/e2 isoforms differ by exactly 12
+N-terminal residues. The variant's identity is already pinned by the
+`(chrom,pos,ref,alt)` coordinate join, so these rows are sound.
+
+**Treatment: hard-gate on residue identity, soft-flag the offset.** Dropping on
+position would have discarded MECP2 and RUNX1 almost entirely for a naming
+convention. The 173 genuine hard failures (ARID1B 92, MEN1 55, ALPK3 23) are
+rows where AM and AlphaFold disagree on the residue itself — real frame
+mismatch — and are dropped and logged. `cv_frame_offset` is kept on every row.
+
+### Trial cohort
+
+| | |
+|---|---|
+| variants | 9,595 |
+| genes | 148 |
+| label balance | 5,757 P/LP vs 3,838 B/LB (**1.50:1**, vs the spike's 2.85:1) |
+| genes with >=10 of both classes | 54 |
+| EVE coverage | 8,306 / 9,595 = 86.6% (135 of 148 proteins in EVE) |
+| unique (protein, position) | 7,673 — the ESM-1v cost unit |
+
+### Phase 2 result — the gene-ID null is the whole story
+
+Structure-only features (pLDDT, RSA, SASA, weighted contact number, relative
+position, protein length), `HistGradientBoostingClassifier`, 5-fold. Macro =
+mean per-gene AUROC over the 54 evaluable genes; CI = 2,000-sample bootstrap
+**over genes**, not variants.
+
+| model | macro AUROC | 95% CI | pooled |
+|---|---|---|---|
+| Structure-only, **gene-held-out** | **0.844** | [0.816, 0.870] | 0.822 |
+| Structure-only, random split | 0.908 | [0.888, 0.928] | 0.956 |
+| Gene-ID-only (circular) | 0.500 | — | **0.821** |
+| Gene-ID-only, gene-held-out | 0.500 | — | 0.500 |
+| AlphaMissense *(reference)* | 0.966 | [0.948, 0.980] | 0.970 |
+| EVE *(reference)* | 0.948 | [0.926, 0.965] | 0.931 |
+
+**Pooled and macro tell opposite stories, and that is the finding.** Knowing
+nothing but the gene name gives pooled AUROC 0.821; the structure model's pooled
+AUROC is 0.822 — **+0.001 over the null**. Macro-averaged, the same model is
+0.844 against a macro null of 0.500. The design review predicted this shape
+("if gene-ID-only gets 0.70 and your structural model gets 0.74, you have
+learned almost nothing"); the real gap is far tighter than that hypothetical.
+Pooled AUROC credits the model for between-gene base rates it never learned.
+**Report macro. Always.**
+
+Gene-ID macro is 0.500 *by construction* — a within-gene constant cannot rank.
+A cross-validated gene-prevalence baseline scores slightly *below* 0.5 (0.367)
+for a mechanical reason worth knowing: its score varies only across CV folds,
+and a gene's train-prevalence excludes the test fold, so a fold holding more
+pathogenic variants leaves a lower train prevalence — systematic
+anti-correlation. Verified as 5 distinct scores per gene, one per fold, with
+mean label decreasing monotonically in the score. It is an artifact; the null
+is 0.5.
+
+Circularity costs the structure model **0.064 macro AUROC** (0.908 random ->
+0.844 gene-held-out). That is the memorisation the review warned about, measured.
+
+AM and EVE are shown as references only and are **not** on equal terms — neither
+trained on ClinVar, while the structure model did. That asymmetry is why the
+gene-ID null exists; the numbers alone do not resolve it.
+
+**Feature importance is deliberately not reported.** pLDDT, RSA and WCN are
+collinear by construction, and permutation importance on correlated features
+measures unique non-redundant contribution within one fitted model, not
+attribution. That is Phase 4's job and needs grouped conditional permutation
+plus LOCO refitting.
+
+### What this trial does not establish
+
+Still five-gene problems at 150-gene scale: no DMS replication, no frequency
+stratification, no paralog clustering (gene-held-out splits still leak across
+paralogs — mmseqs at 30% identity is the fix and is not applied here), and no
+ESM-1v, so no disagreement analysis at all.

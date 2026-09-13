@@ -11,8 +11,10 @@ that disagreement as a function of alignment depth, structural context and
 sequence-length cropping, then adjudicates it against deep mutational scanning
 data, where there is a ground truth that owes nothing to ClinVar.
 
-**Status: Phase 0 (feasibility spike) complete.** The join architecture is
-validated end to end on five genes. Phases 1–3 are not yet built.
+**Status: Phase 0 complete; a 150-gene trial of Phases 1–2 is done.** The join
+architecture is validated end to end, and the structure-only baseline has been
+run under the gene-held-out protocol against a gene-ID null. The full-scale
+Phases 1–2 (300–500 genes, with ESM-1v) are not yet built.
 
 ## What works today
 
@@ -62,12 +64,43 @@ There is real signal to model: rank-normalised disagreement has sd 0.225, and
 22.3% of variants exceed |0.25|. Within-protein rank agreement is +0.700
 (AM–EVE), +0.688 (AM–ESM) and +0.621 (ESM–EVE) — no pair is redundant.
 
+## Trial Phase 1 + 2 (150 genes)
+
+An undersized rehearsal of the real Phases 1 and 2, start to finish on the
+laptop in about three minutes (`scripts/trial/`, outputs in `data/trial/`).
+9,595 variants over 148 genes, 54 with >=10 of both classes. ESM-1v is excluded
+— at 2.571 s/position it needs ~5.5 h for this cohort and belongs on Hoffman2.
+
+Structure-only features, `HistGradientBoostingClassifier`, macro per-gene AUROC,
+bootstrap over genes:
+
+| model | macro AUROC | 95% CI | pooled |
+|---|---|---|---|
+| Structure-only, **gene-held-out** | **0.844** | [0.816, 0.870] | 0.822 |
+| Structure-only, random split | 0.908 | [0.888, 0.928] | 0.956 |
+| Gene-ID-only (circular) | 0.500 | — | **0.821** |
+| AlphaMissense *(reference)* | 0.966 | [0.948, 0.980] | 0.970 |
+| EVE *(reference)* | 0.948 | [0.926, 0.965] | 0.931 |
+
+**The gene-ID null is the result.** Knowing only the gene name gives pooled
+AUROC 0.821; the structure model gets 0.822 pooled — **+0.001**. The same model
+is 0.844 macro against a macro null of 0.500. Pooled and macro tell opposite
+stories because pooled credits the model for between-gene base rates it never
+learned. Report macro.
+
+Holding genes out costs 0.064 macro AUROC (0.908 -> 0.844) — the memorisation
+the design review warned about, now measured rather than asserted.
+
+Two new silent AlphaFold traps and a hard/soft split of the assertion gate came
+out of the scale-up; all three are written up in `data/README.md`.
+
 ## Layout
 
 | path | what |
 |---|---|
 | `scripts/esm1v_masked_marginals.py` | ESM-1v scoring. Emits the full 20-AA log-prob vector per position, so every substitution at a residue costs one forward pass; compute LLR as `lp[mut] - lp[wt]` at analysis time. Cost scales with unique positions, not variants. |
 | `scripts/spike/phase0_{join,assert,finalize,eve}.py` | The Phase 0 pipeline, in order. |
+| `scripts/trial/trial_0{1,2,3}_*.py` | The 150-gene trial: gene selection + structures, joined table, Phase 2 baseline. |
 | `hoffman2/` | SGE submit script and cluster environment setup for the A100 run. |
 | `data/README.md` | **The lab notebook.** Acquisition commands, row counts, licences, and every trap found so far. Read this before touching the data. |
 | `docs/` | Progress report and design review. |
