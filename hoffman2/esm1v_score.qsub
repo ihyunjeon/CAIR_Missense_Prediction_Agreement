@@ -1,0 +1,68 @@
+#!/bin/bash
+# =============================================================================
+# ESM-1v masked-marginal scoring -- CAIR Summer 2026 VEP project
+# =============================================================================
+# Emits the full 20-AA log-probability vector per (protein, position), so every
+# substitution at a residue costs one forward pass total. Cost scales with
+# unique positions, NOT with variant count.
+#
+# SUBMIT (public queue -- NOT highp; this is not Kappel lab work):
+#   qsub -l gpu,A100,cuda=1 hoffman2/esm1v_score.qsub                  # pilot, 1 task
+#   qsub -t 1-20 -v N_SHARDS=20 -l gpu,A100,cuda=1 hoffman2/esm1v_score.qsub
+#
+# RULES (from condenseq-esm-handoff/hoffman2/HOWTO_GPU_DISPATCH.md):
+#   * NEVER pass -q on a GPU job. A queue list + generic -l gpu is a conflicting
+#     request; the job sits in qw forever with no error. (IDRE #100868426.)
+#   * Request the GPU through -l. cuda=1 is the RSMAP consumable qw waits on.
+#   * Do NOT add highp unless you are in the owning group's ACL AND the work
+#     belongs to that group. ijeon is in `kappel`, but this project is not
+#     Kappel work -- stay on the public queue.
+# =============================================================================
+
+#$ -S /bin/bash
+#$ -cwd
+#$ -j y
+#$ -o logs/esm1v.$JOB_ID.$TASK_ID.out
+#$ -l h_rt=4:00:00
+#$ -l h_data=10G
+#$ -pe shared 4
+#$ -N esm1v_vep
+
+set -euo pipefail
+
+export HF_HOME="$SCRATCH/hf_cache"
+export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1    # models pre-staged by rsync
+export OMP_NUM_THREADS=${NSLOTS:-4} MKL_NUM_THREADS=${NSLOTS:-4} OPENBLAS_NUM_THREADS=${NSLOTS:-4}
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+WORK="$SCRATCH/vep"
+# SGE sets SGE_TASK_ID to the literal string "undefined" for a NON-array job,
+# so ${SGE_TASK_ID:-1} does NOT fall back -- it yields "undefined" and argparse
+# rejects it. Normalise explicitly.
+SHARD="${SGE_TASK_ID:-1}"
+[ "$SHARD" = "undefined" ] && SHARD=1
+N_SHARDS="${N_SHARDS:-1}"
+POSITIONS="${POSITIONS:-$WORK/positions.parquet}"
+OUT="$WORK/esm1v/shard_${SHARD}_of_${N_SHARDS}.parquet"
+
+mkdir -p "$WORK/esm1v" logs
+
+# skip-guard + lockfile: lets a second array (other GPU model) share the work
+# without duplicating it. mkdir is atomic on NFS; touch/-f is not.
+if [ -f "$OUT" ]; then echo "[skip] $OUT exists"; exit 0; fi
+LOCK="$OUT.lock"
+if ! mkdir "$LOCK" 2>/dev/null; then echo "[skip] claimed by another task"; exit 0; fi
+trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
+
+echo "=== host $(hostname)  shard $SHARD/$N_SHARDS  $(date) ==="
+nvidia-smi --query-gpu=name,memory.total --format=csv,noheader || echo "no nvidia-smi"
+
+"$HOME/venvs/vep/bin/python" "$WORK/esm1v_masked_marginals.py" \
+    --positions "$POSITIONS" \
+    --shard "$SHARD" --n-shards "$N_SHARDS" \
+    --batch-size 16 \
+    --device cuda \
+    --out "$OUT"
+
+echo "=== done $(date) ==="
+ls -lh "$OUT"
