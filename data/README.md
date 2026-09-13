@@ -377,8 +377,13 @@ the design review warns about. On BRCA1, the one gene with a substantial number
 of negatives, **EVE beats AlphaMissense** (0.964 vs 0.960). Report macro, never
 pooled.
 
-Rank agreement (within-protein Spearman): AM-EVE +0.700, AM-ESM +0.688,
-ESM-EVE +0.621. No pair is redundant; all three carry distinct signal.
+Rank agreement (within-protein Spearman, **variant-count weighted** across the
+five proteins): AM-EVE +0.700, AM-ESM +0.688, ESM-EVE +0.621. No pair is
+redundant; all three carry distinct signal. The weighting matters and was not
+recorded originally -- an unweighted mean over proteins gives +0.664 / +0.668 /
++0.590, about 0.03 lower throughout. State the aggregation whenever a per-gene
+statistic is averaged; it is the same pooled-vs-macro distinction that decides
+the Phase 2 result below.
 
 ### EVE missingness is strongly non-random — do not drop those rows silently
 
