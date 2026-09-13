@@ -46,5 +46,10 @@ venv/
 *.po[0-9]*
 *.pe[0-9]*
 
+# Local-only reports. Kept on disk, never published -- the repo carries the
+# dated progress report from 2026-09-02 but not these.
+docs/CAIR_VEP_project_report_*.docx
+docs/CAIR_VEP_project_report_*.pdf
+
 # macOS
 .DS_Store
