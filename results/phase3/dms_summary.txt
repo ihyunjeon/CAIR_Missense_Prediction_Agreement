@@ -1,0 +1,72 @@
+A. Spearman with DMS damage (assay -> protein -> mean; 95% CI over proteins)
+   AlphaMissense              0.453 [0.422, 0.482]  n=80
+   ESM-1v                     0.439 [0.405, 0.470]  n=80
+   EVE                        0.443 [0.411, 0.475]  n=80
+   ESM-1b                     0.417 [0.387, 0.447]  n=80
+   ESM-IF1 (structure only)   0.422 [0.369, 0.473]  n=80
+   AlphaMissense - ESM-1v: 0.015 [-0.008, 0.039]  p_boot=0.185
+   AlphaMissense - EVE: 0.011 [-0.007, 0.031]  p_boot=0.291
+   ESM-1v - EVE: -0.004 [-0.032, 0.021]  p_boot=0.719
+
+   by selection:
+   Activity           n_prot=18 | AlphaMissense 0.555 | ESM-1v 0.512 | EVE 0.514
+   Binding            n_prot= 7 | AlphaMissense 0.434 | ESM-1v 0.382 | EVE 0.455
+   Expression         n_prot=14 | AlphaMissense 0.461 | ESM-1v 0.463 | EVE 0.400
+   OrganismalFitness  n_prot=26 | AlphaMissense 0.415 | ESM-1v 0.387 | EVE 0.385
+   Stability          n_prot=23 | AlphaMissense 0.428 | ESM-1v 0.456 | EVE 0.479
+
+   by neff_cat:
+   High               n_prot=26 | AlphaMissense 0.446 | ESM-1v 0.503 | EVE 0.477
+   Low                n_prot=20 | AlphaMissense 0.451 | ESM-1v 0.391 | EVE 0.424
+   Medium             n_prot=34 | AlphaMissense 0.460 | ESM-1v 0.417 | EVE 0.428
+
+B. Spearman with DMS within structural context (assays with >=30 in stratum)
+   ordered-buried   n_prot=69 | AlphaMissense 0.480 [0.446, 0.513] | ESM-1v 0.460 [0.423, 0.496] | EVE 0.449 [0.416, 0.482]
+   ordered-exposed  n_prot=77 | AlphaMissense 0.301 [0.266, 0.335] | ESM-1v 0.316 [0.281, 0.350] | EVE 0.308 [0.277, 0.341]
+   IDR              n_prot=27 | AlphaMissense 0.063 [0.000, 0.127] | ESM-1v 0.071 [0.006, 0.134] | EVE 0.040 [-0.013, 0.096]
+
+C. Disagreement adjudication: who is closer to the DMS when two predictors disagree?
+   AlphaMissense vs ESM-1v  (disagreement rate 19.1% of variants)
+     all                            n_prot=79  AlphaMissense wins 0.512 [0.493, 0.531]  p=0.216
+     context=ordered-buried         n_prot=63  AlphaMissense wins 0.556 [0.528, 0.584]  p=0.001
+     context=ordered-exposed        n_prot=75  AlphaMissense wins 0.496 [0.472, 0.520]  p=0.759
+     context=IDR                    n_prot=17  AlphaMissense wins 0.485 [0.404, 0.564]  p=0.737
+     selection=Activity             n_prot=18  AlphaMissense wins 0.541 [0.508, 0.577]  p=0.016
+     selection=Binding              n_prot= 7  AlphaMissense wins 0.537 [0.485, 0.584]  p=0.162
+     selection=Expression           n_prot=13  AlphaMissense wins 0.509 [0.473, 0.541]  p=0.633
+     selection=OrganismalFitness    n_prot=26  AlphaMissense wins 0.529 [0.497, 0.557]  p=0.068
+     selection=Stability            n_prot=23  AlphaMissense wins 0.470 [0.428, 0.514]  p=0.170
+   AlphaMissense vs EVE  (disagreement rate 20.1% of variants)
+     all                            n_prot=80  AlphaMissense wins 0.518 [0.497, 0.539]  p=0.090
+     context=ordered-buried         n_prot=67  AlphaMissense wins 0.527 [0.497, 0.559]  p=0.081
+     context=ordered-exposed        n_prot=75  AlphaMissense wins 0.512 [0.490, 0.532]  p=0.284
+     context=IDR                    n_prot=19  AlphaMissense wins 0.555 [0.496, 0.611]  p=0.067
+     selection=Activity             n_prot=18  AlphaMissense wins 0.573 [0.545, 0.599]  p=0.001
+     selection=Binding              n_prot= 7  AlphaMissense wins 0.491 [0.412, 0.558]  p=0.859
+     selection=Expression           n_prot=14  AlphaMissense wins 0.567 [0.516, 0.617]  p=0.011
+     selection=OrganismalFitness    n_prot=26  AlphaMissense wins 0.542 [0.511, 0.572]  p=0.012
+     selection=Stability            n_prot=23  AlphaMissense wins 0.440 [0.410, 0.469]  p=0.001
+   ESM-1v vs EVE  (disagreement rate 19.6% of variants)
+     all                            n_prot=80  ESM-1v wins 0.501 [0.478, 0.523]  p=0.941
+     context=ordered-buried         n_prot=66  ESM-1v wins 0.487 [0.455, 0.519]  p=0.394
+     context=ordered-exposed        n_prot=76  ESM-1v wins 0.514 [0.492, 0.537]  p=0.208
+     context=IDR                    n_prot=19  ESM-1v wins 0.558 [0.481, 0.634]  p=0.156
+     selection=Activity             n_prot=18  ESM-1v wins 0.497 [0.445, 0.545]  p=0.960
+     selection=Binding              n_prot= 7  ESM-1v wins 0.457 [0.372, 0.531]  p=0.304
+     selection=Expression           n_prot=14  ESM-1v wins 0.566 [0.531, 0.604]  p=0.001
+     selection=OrganismalFitness    n_prot=26  ESM-1v wins 0.510 [0.473, 0.545]  p=0.591
+     selection=Stability            n_prot=23  ESM-1v wins 0.483 [0.436, 0.531]  p=0.523
+
+D. IDR over-calling vs experiment (mean predictor rank - mean DMS rank, IDR variants)
+   AlphaMissense  -0.120 [-0.156, -0.082]  n_prot=27
+   ESM-1v         -0.096 [-0.140, -0.050]  n_prot=27
+   EVE            -0.073 [-0.126, -0.019]  n_prot=27
+   ESM-1b         -0.107 [-0.148, -0.067]  n_prot=27
+   DMS-deleterious fraction, IDR minus ordered: -0.262 [-0.308, -0.216]  n_prot=27
+   D2. of DMS-deleterious variants, fraction a predictor ranks in the assay's top half:
+     AlphaMissense  IDR 0.143 vs ordered 0.755 (gap -0.612 [-0.688, -0.535], n_prot=20)
+     ESM-1v         IDR 0.177 vs ordered 0.724 (gap -0.547 [-0.656, -0.425], n_prot=20)
+     EVE            IDR 0.210 vs ordered 0.721 (gap -0.511 [-0.600, -0.417], n_prot=20)
+   assays with >=30 IDR variants: 33 / 94  (24,177 IDR variants in total)
+
+E. ESM-1v vs ESM-1b within-assay Spearman: 0.825 [0.795, 0.851]; their DMS Spearman differ by 0.021 [0.001, 0.040]

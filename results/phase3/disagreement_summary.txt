@@ -1,0 +1,53 @@
+[clinical] 57,842 variants, 2332 proteins
+
+1. Where does AM rank variants differently from the language model / EVE?
+   IDR              n=10,379  mean D(AM-ESM1b) +0.011  mean D(AM-EVE) -0.012  |D_plm|>=.25: 0.274
+   collagen-helix   n= 2,639  mean D(AM-ESM1b) -0.010  mean D(AM-EVE) -0.003  |D_plm|>=.25: 0.208
+   ordered-buried   n=24,403  mean D(AM-ESM1b) +0.023  mean D(AM-EVE) +0.015  |D_plm|>=.25: 0.254
+   ordered-exposed  n=20,421  mean D(AM-ESM1b) -0.031  mean D(AM-EVE) -0.012  |D_plm|>=.25: 0.245
+   IDR & slim_or_ptm   n=   234  mean D(AM-ESM1b) +0.007  mean D(AM-EVE) -0.026
+
+2. Variance decomposition of the signed disagreement (gene-held-out)
+   [clinical] D_plm: gene-held-out R2 (all groups) = 0.170  (n=57,842)
+     structure  alone +0.015 | unique (LOCO) +0.009 | shared +0.006
+     disorder   alone -0.001 | unique (LOCO) +0.001 | shared -0.002
+     function   alone +0.003 | unique (LOCO) +0.002 | shared +0.001
+     chemistry  alone +0.142 | unique (LOCO) +0.149 | shared -0.007
+     protein    alone +0.001 | unique (LOCO) +0.002 | shared -0.000
+     alignment  alone -0.000 | unique (LOCO) -0.001 | shared +0.001
+   [clinical] D_eve: gene-held-out R2 (all groups) = 0.173  (n=57,842)
+     structure  alone +0.007 | unique (LOCO) +0.001 | shared +0.006
+     disorder   alone +0.000 | unique (LOCO) +0.000 | shared -0.000
+     function   alone +0.001 | unique (LOCO) +0.001 | shared +0.000
+     chemistry  alone +0.165 | unique (LOCO) +0.164 | shared +0.001
+     protein    alone -0.000 | unique (LOCO) -0.000 | shared -0.000
+     alignment  alone -0.000 | unique (LOCO) +0.001 | shared -0.001
+
+3. Adjudication on clinical labels (circular for AM; see DMS arm for the clean test)
+   AM vs ESM-1b all              n=14,590 AM right 0.545 [0.537, 0.554] (on P: 0.543, on B: 0.530)
+   AM vs ESM-1b ordered-buried   n= 6,193 AM right 0.562 [0.546, 0.577] (on P: 0.594, on B: 0.431)
+   AM vs ESM-1b ordered-exposed  n= 5,007 AM right 0.550 [0.525, 0.575] (on P: 0.427, on B: 0.636)
+   AM vs ESM-1b IDR              n= 2,840 AM right 0.478 [0.450, 0.502] (on P: 0.685, on B: 0.462)
+   AM vs EVE    all              n=12,551 AM right 0.517 [0.508, 0.526] (on P: 0.521, on B: 0.512)
+   AM vs EVE    ordered-buried   n= 5,457 AM right 0.530 [0.512, 0.548] (on P: 0.550, on B: 0.374)
+   AM vs EVE    ordered-exposed  n= 4,164 AM right 0.506 [0.481, 0.532] (on P: 0.470, on B: 0.544)
+   AM vs EVE    IDR              n= 2,185 AM right 0.515 [0.487, 0.543] (on P: 0.448, on B: 0.538)
+
+[DMS] 258,747 variants, 77 proteins (largest assay per protein)
+   [dms] D_plm: gene-held-out R2 (all groups) = 0.131  (n=258,747)
+     structure  alone -0.011 | unique (LOCO) +0.017 | shared -0.028
+     disorder   alone -0.035 | unique (LOCO) -0.001 | shared -0.035
+     function   alone -0.004 | unique (LOCO) +0.003 | shared -0.007
+     chemistry  alone +0.161 | unique (LOCO) +0.162 | shared -0.001
+     protein    alone -0.081 | unique (LOCO) +0.012 | shared -0.093
+     alignment  alone -0.000 | unique (LOCO) -0.005 | shared +0.005
+
+4. Disagreement by substitution class (mean signed D; DMS win rate for AM vs ESM-1v)
+   to W/C/M (rare residues)     mean D: DMS -0.033 clinical -0.057 | DMS disagreements  6,326: AM closer 0.543 [0.517, 0.567] n_prot=70
+   to G                         mean D: DMS -0.038 clinical -0.039 | DMS disagreements  2,138: AM closer 0.460 [0.419, 0.499] n_prot=55
+   to P (helix/strand breaker)  mean D: DMS +0.053 clinical -0.012 | DMS disagreements  2,304: AM closer 0.593 [0.553, 0.630] n_prot=48
+   to charged D/E/K/R           mean D: DMS +0.020 clinical +0.044 | DMS disagreements  8,274: AM closer 0.527 [0.499, 0.554] n_prot=71
+   from F/W/Y (aromatic)        mean D: DMS +0.062 clinical +0.101 | DMS disagreements  4,713: AM closer 0.524 [0.477, 0.574] n_prot=65
+   from C/M (sulfur)            mean D: DMS +0.062 clinical +0.094 | DMS disagreements  2,333: AM closer 0.581 [0.530, 0.629] n_prot=48
+   from G                       mean D: DMS +0.031 clinical +0.046 | DMS disagreements  2,633: AM closer 0.506 [0.454, 0.557] n_prot=55
+   everything else              mean D: DMS -0.014 clinical -0.017 | DMS disagreements 16,608: AM closer 0.498 [0.471, 0.524] n_prot=75

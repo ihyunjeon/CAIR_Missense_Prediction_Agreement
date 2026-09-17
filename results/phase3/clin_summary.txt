@@ -1,0 +1,65 @@
+[in] 58,253 variants, 2344 proteins; 287 proteins with >=10 of each class (24,695 variants)
+     context: {'ordered-buried': 24560, 'ordered-exposed': 20487, 'IDR': 10434, 'collagen-helix': 2639, nan: 133}
+
+A. Macro AUROC (per protein, >=10 of each class), 95% CI over proteins
+   AlphaMissense      macro 0.961 [0.955, 0.966]  pooled 0.943  n=287
+   ESM-1b             macro 0.928 [0.921, 0.935]  pooled 0.910  n=287
+   EVE                macro 0.937 [0.931, 0.944]  pooled 0.902  n=287
+   PrimateAI          macro 0.869 [0.857, 0.880]  pooled 0.822  n=284
+   GEMME              macro 0.941 [0.933, 0.948]  pooled 0.908  n=287
+   TranceptEVE-L      macro 0.943 [0.936, 0.949]  pooled 0.875  n=287
+   PoET               macro 0.945 [0.938, 0.951]  pooled 0.916  n=287
+   REVEL (circular)   macro 0.955 [0.949, 0.961]  pooled 0.949  n=251
+   CADD (circular)    macro 0.914 [0.906, 0.921]  pooled 0.894  n=287
+   AlphaMissense - ESM-1b: 0.032 [0.027, 0.038] p_boot=0.001
+   AlphaMissense - EVE: 0.024 [0.019, 0.028] p_boot=0.001
+   ESM-1b - EVE: -0.009 [-0.015, -0.003] p_boot=0.004
+
+B. Base rates (P = pathogenic fraction)
+   IDR              n=10,434  P fraction 0.062
+   ordered-exposed  n=20,487  P fraction 0.418
+   ordered-buried   n=24,560  P fraction 0.777
+   collagen-helix   n= 2,639  P fraction 0.696
+   IDR vs ordered, within-protein Mantel-Haenszel OR for pathogenic: 0.058
+   (naive structure-proxy IDR call, collagen included: n=12,678, P fraction 0.175; Gly-substitution P fraction 0.625)
+   (orthogonal definition, UniProt/MobiDB 'Disordered': OR 0.100)
+   IDR & slim_or_ptm n=  234  P fraction 0.171 vs 0.059 otherwise; within-protein OR 4.02
+   IDR & in_elm      n=   70  P fraction 0.286 vs 0.060 otherwise; within-protein OR 11.04
+   IDR & in_motif    n=   61  P fraction 0.148 vs 0.061 otherwise; within-protein OR 2.85
+   IDR & ptm         n=  125  P fraction 0.152 vs 0.061 otherwise; within-protein OR 2.69
+   IDR & func_site   n=   22  P fraction 0.682 vs 0.060 otherwise; within-protein OR 9.29
+   IDR substitution chemistry (P fraction):
+     to_pro      yes 0.071 (n=408) no 0.061
+     from_gly    yes 0.065 (n=989) no 0.061
+     cys_change  yes 0.110 (n=473) no 0.059
+     arom_loss   yes 0.101 (n=218) no 0.061
+     charge chg  yes 0.084 no 0.051
+
+C. Discrimination by context (per-protein AUROC, >=5 of each class in stratum)
+   ordered-buried   n_prot=150 | AlphaMissense 0.931 (pooled 0.909) | ESM-1b 0.885 (pooled 0.867) | EVE 0.903 (pooled 0.868) | PrimateAI 0.834 (pooled 0.775)
+   ordered-exposed  n_prot=170 | AlphaMissense 0.939 (pooled 0.923) | ESM-1b 0.881 (pooled 0.874) | EVE 0.912 (pooled 0.869) | PrimateAI 0.851 (pooled 0.823)
+   IDR              n_prot= 17 | AlphaMissense 0.859 (pooled 0.833) | ESM-1b 0.737 (pooled 0.728) | EVE 0.837 (pooled 0.769) | PrimateAI 0.835 (pooled 0.754)
+   IDR, slim_or_ptm=True  n=234 (P 0.17) pooled AUROC | AlphaMissense 0.849 | ESM-1b 0.730 | EVE 0.803
+   IDR, slim_or_ptm=False n=10,200 (P 0.06) pooled AUROC | AlphaMissense 0.830 | ESM-1b 0.724 | EVE 0.764
+
+   Operating points (calls = predicted pathogenic):
+   AM call rate 0.470; EVE matched cutoff 6.562; ESM-1b call rate 0.576
+   ordered-buried   nB= 5,459 nP=18,944 | AlphaMissense FPR 0.199 TPR 0.866 | ESM-1b FPR 0.415 TPR 0.924 | EVE FPR 0.242 TPR 0.823
+   ordered-exposed  nB=11,889 nP= 8,532 | AlphaMissense FPR 0.077 TPR 0.741 | ESM-1b FPR 0.276 TPR 0.856 | EVE FPR 0.129 TPR 0.680
+   IDR              nB= 9,738 nP=   641 | AlphaMissense FPR 0.039 TPR 0.401 | ESM-1b FPR 0.064 TPR 0.407 | EVE FPR 0.081 TPR 0.381
+   IDR+motif/PTM    nB=   194 nP=    40 | AlphaMissense FPR 0.067 TPR 0.525 | ESM-1b FPR 0.139 TPR 0.500 | EVE FPR 0.180 TPR 0.650
+
+D. Gene-held-out models (5-fold GroupKFold on protein); macro AUROC on the same proteins
+   context_only (biochemical prior)   0.906 [0.897, 0.915]  vs AM -0.054 [-0.062, -0.047] | buried 0.870 exposed 0.799 IDR 0.687
+   AM + context                       0.964 [0.959, 0.969]  vs AM +0.003 [+0.001, +0.005] | buried 0.940 exposed 0.944 IDR 0.858
+   AM + ESM-1b + EVE                  0.964 [0.958, 0.968]  vs AM +0.003 [+0.001, +0.005] | buried 0.937 exposed 0.943 IDR 0.864
+   AM + ESM-1b + EVE + context        0.966 [0.961, 0.970]  vs AM +0.005 [+0.003, +0.007] | buried 0.941 exposed 0.948 IDR 0.863
+   am                                 0.961 [0.955, 0.966]  vs AM +0.000 [+0.000, +0.000] | buried 0.931 exposed 0.939 IDR 0.859
+   esm1b                              0.928 [0.921, 0.936]  vs AM -0.032 [-0.038, -0.027] | buried 0.885 exposed 0.881 IDR 0.737
+   eve                                0.937 [0.930, 0.944]  vs AM -0.024 [-0.028, -0.019] | buried 0.903 exposed 0.912 IDR 0.837
+
+E. Benign-label circularity: ACMG BS1 (allele-frequency benign) from the EVE release
+   51,307 variants over 1878 proteins carry an EVE-release BS1 flag
+   benign labels that meet BS1: 0.364 overall; IDR 0.274 vs ordered 0.405
+   benign = BS1 only      n_prot=330 | AlphaMissense 0.953 | ESM-1b 0.909 | EVE 0.929 | AM-ESM1b 0.044 [0.036, 0.052] | AM-EVE 0.023 [0.017, 0.029]
+   benign = non-BS1 only  n_prot=323 | AlphaMissense 0.949 | ESM-1b 0.911 | EVE 0.931 | AM-ESM1b 0.037 [0.028, 0.047] | AM-EVE 0.017 [0.011, 0.024]
