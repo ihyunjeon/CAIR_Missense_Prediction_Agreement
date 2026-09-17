@@ -11,11 +11,15 @@ that disagreement as a function of alignment depth, structural context and
 sequence-length cropping, then adjudicates it against deep mutational scanning
 data, where there is a ground truth that owes nothing to ClinVar.
 
-**Status: Phase 0 complete; a 400-gene trial of Phases 1–2 is done.** The join
-architecture is validated end to end, and the structure-only baseline has been
-run under the gene-held-out protocol against a gene-ID null. Still missing from
-the full Phases 1–2: ESM-1v scores (6.8 A100-hours for this cohort), PrimateAI-3D,
-gnomAD constraint metrics, and mmseqs paralog clustering of the CV splits.
+**Status (2026-09-17): Phases 0–3 done, with a Phase 4 and disordered-region
+analysis at 2,344 proteins.** Phase 3, the minimum publishable result, is run
+on 94 human ProteinGym DMS assays (321,676 variants, 80 proteins). The clinical
+arm is widened from 400 genes to 2,344 proteins (58,253 variants) using
+ProteinGym's precomputed scores, so no GPU was needed. See
+[Phase 3 results](#phase-3--dms-adjudication-and-disordered-regions) and
+`data/README.md`. Still not done: fresh ESM-1v on the 400-gene ClinVar cohort
+(ESM-1b stands in, see below), PrimateAI-3D, gnomAD constraint, and mmseqs
+paralog clustering of the CV splits.
 
 ## What works today
 
@@ -102,10 +106,55 @@ which is the confidence-interval argument for going to full scale.
 Two new silent AlphaFold traps and a hard/soft split of the assertion gate came
 out of the scale-up; all three are written up in `data/README.md`.
 
+## Phase 3 — DMS adjudication and disordered regions
+
+`scripts/phase3/`, results in `results/phase3/`, figures in `docs/figures/`.
+All statistics are computed within a protein (or assay) and averaged over
+proteins, with 95% CIs from a bootstrap over proteins.
+
+**1. On experimental ground truth the three predictors are tied.** Mean
+per-protein Spearman with DMS: AlphaMissense 0.453, ESM-1v 0.439, EVE 0.443;
+AM − ESM-1v = +0.015 [−0.008, +0.039]. On ClinVar-derived labels AM leads
+clearly (macro AUROC 0.961 vs ESM-1b 0.928 vs EVE 0.937). That a clinical
+lead does not reappear against experiment is the project's central
+observation. One caveat is still open: the two arms cover different protein
+sets. Restricting the benign class to non-BS1 variants barely moves the lead,
+so allele-frequency benign labels do not explain it.
+
+**2. Disagreement is about the substitution, not the site.** Substitution
+chemistry explains 0.15–0.16 of the gene-held-out variance in the signed
+AM-minus-language-model rank difference. Structure explains ≤0.017; disorder,
+motifs, protein length and MSA depth explain essentially none. When they
+disagree, DMS sides with AM on introduced prolines (0.593), lost Cys/Met
+(0.581) and introduced rare residues W/C/M (0.543). These are the cases where a
+masked language model's amino-acid frequency prior misleads it.
+
+**3. Who wins depends on what the assay measures.** AM beats ESM-1v in buried
+cores (0.556 [0.528, 0.584]) and on activity assays (0.541), but loses to EVE
+on thermodynamic-stability assays (0.440 [0.410, 0.469]).
+
+**4. IDRs: the prior is right, the exceptions are missed.** After fixing the
+collagen trap (below), 6.2% of IDR variants are pathogenic, against 42–78% in
+ordered regions (within-protein OR 0.058). DMS confirms the premise with no
+ClinVar circularity: 26 points fewer deleterious variants. All predictors have
+learned this. Adding disorder features to AM gains +0.003 AUROC, and nothing
+within IDRs. What they miss is the exceptions. At published cutoffs all three
+catch only ~40% of pathogenic IDR variants. Short linear motifs (ELM) carry 11×
+the pathogenic odds of other IDR residues. At IDR motif and PTM sites,
+conservation-based EVE catches 65% against AM's 53%, at a higher
+false-positive rate.
+
+**The collagen trap.** AlphaFold models one collagen chain, so the Gly-X-Y
+triple helix looks disordered to every structure-based disorder proxy. Left
+in, it made "IDR" variants 17.5% pathogenic and IDR glycine substitutions
+62.5% pathogenic, which inverted the biology. It is now its own context class.
+
 ## Layout
 
 | path | what |
 |---|---|
+| `scripts/phase3/p3_0{1..6}_*.py` | Phase 3/4: UniProt mapping, ProteinGym joins, residue features (structure, disorder, motifs), DMS adjudication, clinical + IDR analysis, disagreement decomposition. |
+| `results/phase3/` | The small result tables and text summaries behind every number above. |
 | `scripts/esm1v_masked_marginals.py` | ESM-1v scoring. Emits the full 20-AA log-prob vector per position, so every substitution at a residue costs one forward pass; compute LLR as `lp[mut] - lp[wt]` at analysis time. Cost scales with unique positions, not variants. |
 | `scripts/spike/phase0_{join,assert,finalize,eve}.py` | The Phase 0 pipeline, in order. |
 | `scripts/trial/trial_0{1,2,3}_*.py` | The 400-gene trial: gene selection + structures, joined table, Phase 2 baseline. |
@@ -148,6 +197,15 @@ and land in `data/alphafold/`. Then:
 
 About four minutes end to end on an M3 Pro. Step 1 takes a gene count as its
 only argument.
+
+Phase 3 additionally needs the ProteinGym v1.3 files and the ELM instance table
+(commands in `data/README.md`), then:
+
+    for s in 01_map 02_build 03_features 04_dms 05_clinical 06_disagreement; do
+        python scripts/phase3/p3_$s.py; done
+
+Roughly 30 minutes the first time (UniProt API, 2,055 AlphaFold downloads,
+SASA), about 10 minutes after that.
 
 ## Licence
 
@@ -211,11 +269,11 @@ defensible result at the end of Phase 3.
 | # | phase | owner | deliverable |
 |---|---|---|---|
 | 0 | Spike | Ihyun | One joined row end to end. **Done** — assertion 1,168/1,168 |
-| 1 | Data | Labels owner · Ihyun | The joined table at 300-500 genes: 4 predictors, DSSP/RSA/pLDDT/contact number/Pfam, gnomAD AF + LOEUF + Neff + crop flag, plus ProteinGym DMS as a second label set |
-| 2 | Baseline | Baseline owner | Structure-only classifier, gene-held-out CV, macro AUROC, bootstrap-over-genes CIs, against a gene-ID-only null |
-| 3 | Core | DMS owner | **Minimum publishable result.** On DMS, restrict to disagreement cases and ask which predictor tracks experimental fitness, stratified by structure |
-| 4 | Model | Modelling owner | Predict the signed disagreement residual. Grouped conditional permutation, LOCO with refitting, variance decomposition as a Venn with the overlap made explicit |
-| 5 | Stress | Ihyun | Stratify by gnomAD-observed vs unobserved; replicate on DMS |
+| 1 | Data | Labels owner · Ihyun | The joined table at 300-500 genes: 4 predictors, DSSP/RSA/pLDDT/contact number/Pfam, gnomAD AF + LOEUF + Neff + crop flag, plus ProteinGym DMS as a second label set. **Done at 2,344 proteins** via ProteinGym clinical (ESM-1b for ESM-1v; no gnomAD LOEUF, no Pfam) |
+| 2 | Baseline | Baseline owner | Structure-only classifier, gene-held-out CV, macro AUROC, bootstrap-over-genes CIs, against a gene-ID-only null. **Done** (400-gene trial; context-only prior at 2,344 proteins: macro 0.906) |
+| 3 | Core | DMS owner | **Minimum publishable result.** On DMS, restrict to disagreement cases and ask which predictor tracks experimental fitness, stratified by structure. **Done** — 94 assays, 80 proteins |
+| 4 | Model | Modelling owner | Predict the signed disagreement residual. Grouped conditional permutation, LOCO with refitting, variance decomposition as a Venn with the overlap made explicit. **Lite done** — grouped LOCO + single-group R², unique/shared split |
+| 5 | Stress | Ihyun | Stratify by gnomAD-observed vs unobserved; replicate on DMS. **Partial** — BS1 benign-label split only; no gnomAD-observed split |
 
 **Phase 3 does not depend on Phase 1** — its inputs are ProteinGym (which ships
 its own ESM-1v scores) and the local AlphaMissense atlas. It needs no GPU and is
@@ -226,13 +284,19 @@ unstaged scope at roughly 2x what five students finish in a summer.
 
 ## Immediate next actions
 
-- **Start PrimateAI-3D licence registration.** It is external, slow, and the
-  long pole on Phase 1.
-- Widen the gene set before any structural claim. Five genes cannot separate
-  crop effects from gene identity (the cropped set is exactly BRCA1 + CFTR), and
-  BRCA1 at mean pLDDT 41.6 dominates any structural stratification.
-- Test the TF32 hypothesis on the same 734 positions before committing the full
-  array; re-run the laptop/cluster cross-validation if precision changes.
+- **Explain the clinical-vs-DMS gap.** AM leads on ClinVar-derived labels but is
+  tied on DMS, and the BS1 split does not account for it. Candidates to test:
+  label curation that used earlier predictors, DMS assay-phenotype mismatch,
+  and protein-set differences (80 DMS proteins vs 287 clinical ones — rerun the
+  clinical comparison on the overlap).
+- **IDR motifs are the open clinical problem.** Build a motif-aware test set
+  (ELM, phospho-switches, degrons) and ask whether a conservation-weighted
+  score recovers the ~60% of pathogenic IDR variants every predictor misses.
+- Run fresh ESM-1v on the 400-gene ClinVar cohort (6.8 A100-h) to replace the
+  ESM-1b stand-in; test the TF32 hypothesis first.
+- Handle obligate oligomers beyond collagen (coiled coils, keratins) in the
+  disorder call, and add gnomAD LOEUF + Pfam for the full Phase 1 table.
+- **Start PrimateAI-3D licence registration.** The ProteinGym column is the
+  original PrimateAI (macro 0.869), not -3D.
 - Record which GPU models each teammate can reach. A non-member's `highp` job
   waits forever with no error.
-- Decide whether dbNSFP 5.x still earns its 30-60 GB now that EVE is in hand.

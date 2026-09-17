@@ -15,6 +15,8 @@ not treat those notebooks as the current codebase.
 | `scripts/` | `esm1v_masked_marginals.py` (the only predictor actually executed) |
 | `scripts/spike/` | Phase 0 pipeline: `phase0_join` -> `_assert` -> `_finalize` -> `_eve` |
 | `scripts/trial/` | 400-gene trial of Phases 1-2: `trial_01_genes` -> `_02_build` -> `_03_baseline` |
+| `scripts/phase3/` | Phases 3-4 + IDR on ProteinGym: `p3_01_map` -> `_02_build` -> `_03_features` -> `_04_dms` / `_05_clinical` -> `_06_disagreement` |
+| `results/phase3/` | Small tracked result tables behind the Phase 3 numbers |
 | `hoffman2/` | SGE submit script + cluster env setup for the A100 run |
 | `data/` | Untracked (~3.9 GB). `data/README.md` IS tracked and is the lab notebook |
 | `data/trial/` | Trial outputs; the small derived parquet IS tracked |

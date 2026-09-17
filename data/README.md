@@ -450,13 +450,16 @@ Acquired and in use:
   **v6, resolved per accession from the API**. Not the bulk proteome tarball;
   the plan's "human proteome v4" is superseded (the _v4 URLs 404).
 
+- ProteinGym v1.3 (acquired 2026-09-16, `proteingym/`) — see the Phase 3
+  section for sizes, keys and traps.
+- ELM human true-positive motif instances (`annot/elm_instances.tsv`, 2,270
+  instances, downloaded 2026-09-16 from `elm.eu.org/instances.tsv`).
+- AlphaFold v6 models for 2,384 accessions (2,055 new) — `alphafold/`.
+
 Still to acquire:
 
-- ProteinGym substitutions (DMS ground truth, ships ESM-1v + AM scores).
-  Phase 3 depends on this and it needs no GPU — highest-value next download.
 - PrimateAI-3D (**license registration required — start early**, it is the
   long pole on a full Phase 1)
-- ESM-IF1 scores (via ProteinGym) — fills the structure-only cell
 - gnomAD constraint metrics (LOEUF, gene-level; ~10 MB, do NOT pull gnomAD VCFs)
 
 ## Trial Phase 1 + 2 (2026-09-12) — 150-gene scale-up
@@ -652,3 +655,180 @@ dozen evaluable genes are not stable**, which is exactly the confidence-interval
 argument the design review made for 300-500 genes. Anything measured on the
 five-gene spike or on 150 genes should be re-estimated at full scale before it
 is written down as a finding.
+
+## Phase 3 + IDR analysis (2026-09-16/17) — ProteinGym, 2,344 clinical proteins
+
+Scripts: `scripts/phase3/p3_0{1..6}_*.py`, run from the repo root in the `vep`
+env (which now also needs `pip install matplotlib`). Large outputs go to
+`data/phase3/` (untracked); the small result tables are tracked in
+`results/phase3/` and the figures in `docs/figures/`. Steps 4-6 take about 10
+minutes on the laptop; step 1 is UniProt API time (~4 min); step 3 is ~10 min
+the first time (AlphaFold fetch + SASA) and seconds once cached.
+
+### Acquisition — the earlier size estimates were wrong
+
+    B=https://marks.hms.harvard.edu/proteingym/ProteinGym_v1.3
+    curl -O $B/DMS_ProteinGym_substitutions.zip             #   43 MB (not 1.0 GB)
+    curl -O $B/zero_shot_substitutions_scores.zip           #  1.9 GB (not 4.4 GB)
+    curl -O $B/clinical_ProteinGym_substitutions.zip        #  3.4 MB
+    curl -O $B/zero_shot_clinical_substitutions_scores.zip  #   13 MB
+    curl -O $B/DMS_substitutions.csv
+    curl -O $B/clinical_substitutions.csv
+
+Only the 96 human assays are extracted from the 1.9 GB archive (985 MB).
+`zero_shot_clinical_scores.zip` 404s; the real name has `_substitutions_` in it.
+Sizes are measured (content-length), superseding the metadata-only estimates above.
+
+### Traps found
+
+1. **The clinical zero-shot file has no ESM-1v.** It carries ESM-1b, EVE, GEMME,
+   TranceptEVE, PoET, PrimateAI (the original, not -3D), REVEL, CADD and other
+   dbNSFP columns. ESM-1b stands in for ESM-1v in the clinical arm. On the DMS
+   set, where both exist, their within-assay Spearman is 0.825 [0.795, 0.851]
+   and ESM-1v tracks DMS better by only 0.021 [0.001, 0.040].
+2. **Clinical proteins are keyed by RefSeq NP_, DMS by UniProt entry name.**
+   Both are resolved with the UniProt ID-mapping API and placed in the canonical
+   frame by an offset search. 2,344/2,525 clinical proteins and 94/96 human
+   assays resolve (the 2 misses are Q53Z42, an unreviewed MHC entry).
+3. **Designed constructs are not the canonical sequence.** 14 assays (mostly
+   Tsuboyama 2023 domains, plus RASK and SYUA) match the canonical at only
+   89-99% of mutated positions. The frame is right; the constructs carry
+   engineered substitutions. The frame gate is therefore 85%, and the
+   per-variant reference-residue gate drops exactly the 1,300 rows that disagree.
+4. **Score orientation is not uniform, and one column broke silently.**
+   ProteinGym orients model scores "higher = fitter", but the clinical PoET
+   column is the other way round (macro AUROC 0.055 with the documented sign).
+   `p3_02` now asserts the orientation of every column, not just the main ones.
+5. **THE COLLAGEN TRAP.** AlphaFold models a single collagen chain, so the
+   Gly-X-Y triple-helix domain comes out low-pLDDT and fully exposed, and both
+   structure-derived disorder proxies call it an IDR. Glycine is obligatory at
+   every third position of the helix, so Gly substitutions there are the
+   classic pathogenic class (osteogenesis imperfecta, Ehlers-Danlos, Alport).
+   With collagen left in, "IDR" variants were 17.5% pathogenic and IDR Gly
+   substitutions 62.5% (1,605 collagen variants at 96.5%). With the triple
+   helix removed (UniProt 'Triple-helical region' or >= 10 Gly-X-Y repeats;
+   21,130 residues in 32 proteins), IDR variants are **6.2%** pathogenic and IDR
+   Gly substitutions 6.5%. Any "pLDDT < 50 = disordered" analysis of human
+   disease genes has this bug unless it handles obligate oligomers.
+6. **pandas 3 strings are Arrow-backed.** Iterating a string Series builds an
+   Arrow scalar per element; a `set(series)` inside a comprehension turned a
+   seconds-long step into 30+ minutes. Iterate `.to_numpy(dtype=object)`.
+
+### Disorder definition
+
+`idr` = AlphaFold pLDDT < 50 AND 25-residue mean RSA >= 0.581, minus the
+collagen triple helix: 20.6% of residues. Agreement with UniProt/MobiDB-lite
+'Disordered' regions is moderate (kappa 0.50) and the two definitions point the
+same way everywhere they were compared. Motif and PTM annotations are enriched
+in IDRs as expected (ELM 0.48% vs 0.13% of residues; PTM 1.64% vs 0.65%);
+functional sites are depleted (0.09% vs 0.92%).
+
+### DMS arm (the non-circular test) — 321,676 variants, 94 assays, 80 proteins
+
+Aggregation: per assay, then mean within protein, then mean over proteins; 95%
+CIs bootstrap proteins.
+
+| Spearman with DMS | mean [95% CI] |
+|---|---|
+| AlphaMissense | 0.453 [0.422, 0.482] |
+| ESM-1v | 0.439 [0.405, 0.470] |
+| EVE | 0.443 [0.411, 0.475] |
+| ESM-1b | 0.417 [0.387, 0.447] |
+| ESM-IF1 (structure only) | 0.422 [0.369, 0.473] |
+
+**On experimental ground truth the three predictors are tied**: AM - ESM-1v
+= +0.015 [-0.008, +0.039], AM - EVE = +0.011 [-0.007, +0.031]. Contrast the
+clinical arm below, where AM leads by 0.02-0.03 AUROC with tight CIs.
+
+Disagreement adjudication (|rank difference| >= 0.25, 19-20% of variants;
+"win" = rank closer to the DMS rank):
+
+- AM beats ESM-1v in **buried ordered residues**: 0.556 [0.528, 0.584]; not in
+  exposed residues (0.496) or IDRs (0.485, 17 proteins).
+- AM **loses to EVE on stability assays**: 0.440 [0.410, 0.469], while winning
+  on activity (0.573), expression (0.567) and organismal fitness (0.542).
+  Stability assays measure the folding free energy of (often isolated)
+  domains; AM's population-frequency tuning tracks organismal constraint.
+- ESM-1v vs EVE: no difference overall (0.501).
+
+IDRs in DMS (27 proteins with >= 30 IDR variants): the experimentally
+deleterious fraction is **26 points lower** in IDRs than in ordered regions of
+the same assays (-0.262 [-0.308, -0.216]), so the "IDR = tolerant" premise holds
+with no ClinVar circularity. But the predictors overshoot. Of the variants an
+assay calls deleterious, the fraction ranked in that assay's top half is AM
+0.143, ESM-1v 0.177, EVE 0.210 in IDRs, against 0.72-0.76 in ordered regions.
+The mean-rank version (AM -0.120, ESM-1v -0.096, EVE -0.073) points the same
+way but is exposed to regression to the middle; cite the binary version.
+Conservation-based EVE is the least biased, structure-aware AM the most.
+
+### Clinical arm — 58,253 variants, 2,344 proteins (30,203 P / 28,050 B)
+
+287 proteins have >= 10 of each class.
+
+| macro AUROC | mean [95% CI] | pooled |
+|---|---|---|
+| AlphaMissense | 0.961 [0.955, 0.966] | 0.943 |
+| ESM-1b | 0.928 [0.921, 0.935] | 0.910 |
+| EVE | 0.937 [0.931, 0.944] | 0.902 |
+| GEMME | 0.941 | 0.908 |
+| TranceptEVE-L | 0.943 | 0.875 |
+| PoET | 0.945 | 0.916 |
+| PrimateAI (original) | 0.869 | 0.822 |
+| REVEL (circular) | 0.955 | 0.949 |
+
+Base rates (pathogenic fraction): buried 0.777, exposed 0.418, collagen helix
+0.696, **IDR 0.062**. Within-protein Mantel-Haenszel OR, IDR vs ordered:
+**0.058** (UniProt disorder definition: 0.100).
+
+The exceptions inside IDRs are real and large (within-protein OR against other
+IDR residues): ELM motif **11.0** (n=70, 28.6% P), UniProt functional site 9.3,
+any motif/PTM 4.0 (n=234, 17.1% P), UniProt motif 2.9, PTM 2.7. Substitution
+chemistry matters less inside IDRs: cysteine change 11.0% P, aromatic loss
+10.1%, charge change 8.4% vs 5.1%; proline and glycine are near baseline.
+
+Discrimination within context (macro AUROC, AM / ESM-1b / EVE): buried 0.931 /
+0.885 / 0.903; exposed 0.939 / 0.881 / 0.912; **IDR 0.859 / 0.737 / 0.837**
+(17 proteins). The language model degrades most in IDRs.
+
+At published operating points (AM >= 0.564; ESM-1b LLR <= -7.5; EVE at AM's
+call rate), **all three miss about 60% of pathogenic IDR variants**
+(sensitivity AM 0.401, ESM-1b 0.407, EVE 0.381) at low false-positive rates
+(0.04-0.08). In IDR motifs and PTM sites EVE recovers the most (0.650 vs AM
+0.525) at the cost of FPR 0.180 vs 0.067: conservation sees motifs that
+structure cannot.
+
+**Is disorder already accounted for?** Gene-held-out gradient boosting:
+context alone (structure + disorder + motif + chemistry, no evolution) 0.906;
+AM + context 0.964 (+0.003 over AM); AM + ESM-1b + EVE 0.964 (+0.003); all +
+context 0.966 (+0.005). Within IDRs, adding context to AM changes nothing
+(0.858 vs 0.859). **AM has already internalised the disorder prior;** explicit
+disorder features buy essentially nothing for within-protein ranking. What is
+missing in IDRs is sensitivity to the functional exceptions.
+
+**Frequency-label circularity (BS1).** 36.4% of benign labels meet ACMG BS1
+(EVE-release gnomAD; IDR 27.4% vs ordered 40.5%). AM's lead over ESM-1b is
++0.044 [0.036, 0.052] with BS1-only benigns and +0.037 [0.028, 0.047] with
+non-BS1 benigns: a small shrink with overlapping CIs. Frequency leakage through
+BS1 does not explain AM's clinical lead.
+
+### What drives disagreement (Phase 4-lite)
+
+Signed within-protein rank difference; gene-held-out HistGradientBoosting;
+grouped features; LOCO with refitting:
+
+| target | R2 all | chemistry unique | structure unique | disorder / function / protein / alignment |
+|---|---|---|---|---|
+| clinical AM - ESM-1b | 0.170 | 0.149 | 0.009 | <= 0.002 each |
+| clinical AM - EVE | 0.173 | 0.164 | 0.001 | <= 0.001 each |
+| DMS AM - ESM-1v | 0.131 | 0.162 | 0.017 | <= 0.012 each |
+
+**The predictors disagree about which substitution, not which site.** Relative
+to ESM-1b, AM penalises loss of F and W (+0.17 to +0.20 in rank) and of C and M
+(+0.08 to +0.11), and gain of charge; the language model penalises gain of
+W/M/G/C (rare residues, consistent with a masked-marginal amino-acid-frequency
+bias). Adjudicated on DMS, AM is closer on to-P (0.593 [0.553, 0.630]),
+from-C/M (0.581) and to-W/C/M (0.543); ESM-1v is closer on to-G (AM 0.460).
+Disorder and MSA depth explain essentially none of the signed disagreement.
+
+Clinical adjudication (circular for AM): AM is right in 0.545 of AM-vs-ESM-1b
+disagreements overall, 0.562 in buried residues, **0.478 in IDRs**.

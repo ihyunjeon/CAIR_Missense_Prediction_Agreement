@@ -1,0 +1,7 @@
+benign_set,predictor,n_prot,macro
+benign = BS1 only,am,330,0.9525026786172018
+benign = BS1 only,esm1b,330,0.9086710857135453
+benign = BS1 only,eve,330,0.9294224792543169
+benign = non-BS1 only,am,323,0.9485139371944951
+benign = non-BS1 only,esm1b,323,0.9114142981959378
+benign = non-BS1 only,eve,323,0.9311499974772225
