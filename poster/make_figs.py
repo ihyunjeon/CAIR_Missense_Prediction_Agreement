@@ -32,7 +32,7 @@ VIRIDIS = plt.cm.viridis
 
 plt.rcParams.update({
     "font.family": "sans-serif",
-    "font.size": 12,
+    "font.size": 9,
     "axes.spines.top": False,
     "axes.spines.right": False,
     "axes.edgecolor": DARK,
@@ -99,19 +99,19 @@ macro_err = np.vstack([
 ax.errorbar(x - w / 2, sub["macro_auroc"], yerr=macro_err, fmt="none", ecolor=DARK, capsize=3, lw=1.2)
 
 for xi, v in zip(x - w / 2, sub["macro_auroc"]):
-    ax.text(xi, v + 0.025, f"{v:.3f}", ha="center", fontsize=10)
+    ax.text(xi, v + 0.025, f"{v:.3f}", ha="center", fontsize=8)
 for xi, v in zip(x + w / 2, sub["pooled_auroc"]):
-    ax.text(xi, v + 0.025, f"{v:.3f}", ha="center", fontsize=10)
+    ax.text(xi, v + 0.025, f"{v:.3f}", ha="center", fontsize=8)
 
 ax.axhline(0.5, color=GRAY, lw=1, ls="--", zorder=0)
 ax.set_ylim(0.45, 1.06)
 ax.set_xticks(x)
 ax.set_xticklabels(labels)
 ax.set_ylabel("AUROC")
-ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2, frameon=False, fontsize=10)
+ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2, frameon=False, fontsize=8)
 ax.set_title(
     "Knowing only the gene name pools to 0.805; structure adds +0.034",
-    fontsize=13, loc="left",
+    fontsize=10, loc="left",
 )
 fig.tight_layout()
 savefig(fig, "fig1_gene_id_null")
@@ -152,12 +152,12 @@ gaps = [gap150, gap400]
 ns = [54, 103]
 bars = ax.bar(xs, gaps, width=0.5, color=[GRAY, ORANGE])
 for xi, g, n in zip(xs, gaps, ns):
-    ax.text(xi, g + 0.001, f"+{g:.3f}", ha="center", fontsize=11)
+    ax.text(xi, g + 0.001, f"+{g:.3f}", ha="center", fontsize=8)
 ax.set_xticks(xs)
 ax.set_xticklabels([f"150 genes\n(54 evaluable)", f"400 genes\n(103 evaluable)"])
 ax.set_ylabel("pooled AUROC − gene-ID-null pooled AUROC")
 ax.set_ylim(0, 0.045)
-ax.set_title("The 150-gene gap (+0.001) does not\nreplicate at 400 genes (+0.034)", fontsize=12, loc="left")
+ax.set_title("The 150-gene gap (+0.001) does not\nreplicate at 400 genes (+0.034)", fontsize=9.5, loc="left")
 
 ax = axes[1]
 macro = [r150["struct_heldout_macro"], r400["struct_heldout_macro"]]
@@ -166,13 +166,13 @@ hi = [r150["struct_heldout_macro_hi"], r400["struct_heldout_macro_hi"]]
 err = np.vstack([np.array(macro) - np.array(lo), np.array(hi) - np.array(macro)])
 ax.errorbar(xs, macro, yerr=err, fmt="o", color=BLUE, capsize=4, markersize=8, lw=1.5)
 for xi, v in zip(xs, macro):
-    ax.text(xi + 0.08, v, f"{v:.3f}", va="center", fontsize=11)
+    ax.text(xi + 0.08, v, f"{v:.3f}", va="center", fontsize=8)
 ax.set_xlim(-0.5, 1.7)
 ax.set_xticks(xs)
 ax.set_xticklabels(["150 genes", "400 genes"])
 ax.set_ylabel("structure-only, gene-held-out\nmacro AUROC (95% CI over genes)")
 ax.set_ylim(0.78, 0.92)
-ax.set_title("Gene-held-out macro AUROC rises\nand its CI tightens at scale", fontsize=12, loc="left")
+ax.set_title("Gene-held-out macro AUROC rises\nand its CI tightens at scale", fontsize=9.5, loc="left")
 
 fig.suptitle("")
 fig.tight_layout()
@@ -228,10 +228,10 @@ for i in range(3):
     for j in range(3):
         txt = "1.00" if i == j else f"{M[i, j]:.3f}"
         color = "white" if M[i, j] < 0.75 else "black"
-        ax.text(j, i, txt, ha="center", va="center", color=color, fontsize=12)
+        ax.text(j, i, txt, ha="center", va="center", color=color, fontsize=9)
 cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 cbar.set_label("variant-weighted\nSpearman rank agreement")
-ax.set_title("No predictor pair is redundant\n(spike: 5 genes, 1,149 variants)", fontsize=11, loc="left")
+ax.set_title("No predictor pair is redundant\n(spike: 5 genes, 1,149 variants)", fontsize=9, loc="left")
 fig.tight_layout()
 savefig(fig, "fig3_rank_agreement")
 
@@ -297,7 +297,7 @@ for g, i in y_pos.items():
     n_neg = int(res[res.gene == g]["n_neg"].iloc[0])
     n = int(res[res.gene == g]["n"].iloc[0])
     flag = "  (unreliable, n_neg<10)" if n_neg < 10 else ""
-    ax.text(1.002, i, f"n={n}, n_neg={n_neg}{flag}", va="center", fontsize=9, color=GRAY)
+    ax.text(1.002, i, f"n={n}, n_neg={n_neg}{flag}", va="center", fontsize=7, color=GRAY)
 
 ax.set_yticks(range(len(gene_order)))
 ax.set_yticklabels(gene_order)
@@ -305,10 +305,10 @@ ax.set_xlim(0.80, 1.13)
 ax.set_xticks([0.80, 0.85, 0.90, 0.95, 1.00])
 ax.axvline(1.0, color=GRAY, lw=0.8, ls=":")
 ax.set_xlabel("per-gene AUROC")
-ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=3, frameon=False, fontsize=10)
+ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=3, frameon=False, fontsize=8)
 ax.set_title(
     "PTEN and CFTR look saturated but rest on 6 and 3 negatives",
-    fontsize=12, loc="left",
+    fontsize=9.5, loc="left",
 )
 fig.tight_layout()
 savefig(fig, "fig4_pergene_auroc")
