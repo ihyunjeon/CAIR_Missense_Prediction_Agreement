@@ -29,17 +29,17 @@ df = pd.read_parquet(OUT/"joined_pre_assert.parquet")
 seqs = json.load(open("data/alphafold/sequences.json"))
 print(f"[in] {len(df):,} joined rows, {df.uniprot_id.nunique()} proteins")
 
-# --- parse AM protein_variant  e.g. R273H
+# parse AM protein_variant  e.g. R273H
 am = df.protein_variant.str.extract(r'^([A-Z])(\d+)([A-Z])$')
 df["am_ref_aa"], df["aa_pos"], df["am_alt_aa"] = am[0], am[1].astype("Int64"), am[2]
 
-# --- parse ClinVar Name  e.g. NM_000546.6(TP53):c.818G>A (p.Arg273His)
+# parse ClinVar Name  e.g. NM_000546.6(TP53):c.818G>A (p.Arg273His)
 cv = df.cv_name.str.extract(r'\(p\.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2})\)')
 df["cv_ref_aa"] = cv[0].map(AA3)
 df["cv_pos"]    = pd.to_numeric(cv[1], errors="coerce").astype("Int64")
 df["cv_alt_aa"] = cv[2].map(AA3)
 
-# --- AlphaFold residue at that position (1-indexed -> 0-indexed)
+# AlphaFold residue at that position (1-indexed -> 0-indexed)
 def af_aa(r):
     s = seqs.get(r.uniprot_id)
     p = r.aa_pos
@@ -47,7 +47,7 @@ def af_aa(r):
     return s[int(p)-1]
 df["af_ref_aa"] = df.apply(af_aa, axis=1)
 
-# ------------------------------------------------------ THE ASSERTION
+# THE ASSERTION
 ok_am_af = df.am_ref_aa == df.af_ref_aa
 ok_am_cv = df.am_ref_aa == df.cv_ref_aa
 ok_pos   = df.aa_pos    == df.cv_pos
@@ -65,14 +65,15 @@ for lbl, m in [("AM ref == AlphaFold ref", ok_am_af),
 
 fails = df[~ok_all]
 if len(fails):
-    print(f"\n--- {len(fails)} failing rows, by gene ---")
+    print(f"
+{len(fails)} failing rows, by gene")
     print(fails.groupby("gene").size().to_string())
     fails.to_parquet(OUT/"assertion_failures.parquet")
     print(f"  logged -> {OUT/'assertion_failures.parquet'}")
     print(fails[["gene","uniprot_id","cv_name","protein_variant",
                  "am_ref_aa","cv_ref_aa","af_ref_aa","aa_pos","cv_pos"]].head(8).to_string(index=False))
 
-# ------------------------------------------------------ structure features
+# structure features
 print("\n=== structure features (pLDDT, RSA) ===")
 feats = {}
 for u in df.uniprot_id.dropna().unique():

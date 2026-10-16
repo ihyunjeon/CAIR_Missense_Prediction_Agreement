@@ -136,7 +136,8 @@ print("PHASE 2 TRIAL RESULTS   (macro = mean per-gene AUROC over evaluable genes
 print("="*88)
 print(res.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
 
-print("\n--- what the gene-held-out penalty costs the structure model ---")
+print("
+what the gene-held-out penalty costs the structure model ---")
 a = res.loc[res.model == "Structure-only, RANDOM split", "macro_auroc"].iat[0]
 b = res.loc[res.model == "Structure-only, gene-held-out", "macro_auroc"].iat[0]
 print(f"random split {a:.3f} -> gene-held-out {b:.3f}   (delta {b-a:+.3f})")
@@ -150,7 +151,8 @@ print("The two metrics tell opposite stories, and macro is the honest one:")
 print("pooled credits the model for between-gene base rates it did not learn.")
 print("Gene-ID macro is 0.500 by construction -- a within-gene constant cannot rank.")
 
-print("\n--- feature importance is NOT reported ---")
+print("
+feature importance is NOT reported ---")
 print("Permutation importance on correlated structural features measures unique")
 print("non-redundant contribution within one fitted model, not attribution.")
 print("pLDDT, RSA and WCN are collinear by construction. That analysis is Phase 4,")
